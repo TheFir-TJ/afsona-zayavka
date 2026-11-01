@@ -178,7 +178,11 @@ function ownerView(D){
   const h=location.hash.replace(/^#/,'');
   try{
     if(h.startsWith('o=')){ if(!window.DecompressionStream)throw 'Обновите Telegram';ownerView(await inflate(h.slice(2)))}
-    else if(h.startsWith('s=')){const m=h.match(/^s=([^&]*)(?:&r=(.*))?$/);let R={};if(m[2]&&window.DecompressionStream){try{R=await inflate(m[2])}catch(e){}}staffInit(decodeURIComponent(m[1]),R);staffHome()}
+    else if(h.startsWith('s=')){const m=h.match(/^s=([^&]*)(?:&r=(.*))?$/);let R={};
+      const now=new Date();if(now.getHours()>=5)now.setDate(now.getDate()+1);
+      const date=String(now.getDate()).padStart(2,'0')+'.'+String(now.getMonth()+1).padStart(2,'0');  // как у бота: после 05:00 — на завтра
+      if(m[2]&&window.DecompressionStream){try{const z=await inflate(m[2]);const old=z.p===undefined;const zd=old?decodeURIComponent(m[1]):z.d;if(zd===date)R=old?z:z.p}catch(e){}}
+      staffInit(date,R);staffHome()}
     else throw 'Откройте заявку кнопкой в боте.';
   }catch(e){app.innerHTML='<div id="err">'+e+'</div>'}
 })();
