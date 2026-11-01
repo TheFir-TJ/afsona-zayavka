@@ -2,82 +2,153 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Заявка</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<title>Заявки Афсона</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root{--bg:#fff;--fg:#111;--mut:#777;--line:#e4e4e4;--acc:#2481cc;--fill:#e8f3ff}
-@media (prefers-color-scheme:dark){:root{--bg:#17212b;--fg:#f1f1f1;--mut:#9aa7b3;--line:#2b3a49;--acc:#5aa9e6;--fill:#1f3a52}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.3 -apple-system,Segoe UI,Roboto,Arial,sans-serif;padding-bottom:90px}
-header{position:sticky;top:0;background:var(--bg);padding:10px 14px 8px;border-bottom:1px solid var(--line);z-index:2}
-h1{margin:0;font-size:19px}.sub{color:var(--mut);font-size:13px;margin-top:2px}
-#q{width:100%;margin-top:8px;padding:9px 11px;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
-.row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line)}
-.row.on{background:var(--fill)}
-.nm{flex:1;min-width:0}.nm b{font-weight:600}.us{color:var(--mut);font-size:12px}
-.row input{width:92px;padding:9px 8px;font-size:18px;text-align:center;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
-.row.on input{border-color:var(--acc)}
-.note{padding:12px 14px}.note textarea{width:100%;min-height:60px;padding:9px;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
-.add{padding:0 14px 6px}.add button{font-size:15px;color:var(--acc);background:none;border:0;padding:8px 0}
-.free{display:flex;gap:8px;padding:6px 14px}.free input{padding:9px;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
-.free .fn{flex:1;min-width:0}.free .fq{width:92px;text-align:center}
-#send{position:fixed;left:14px;right:14px;bottom:max(14px,env(safe-area-inset-bottom));padding:15px;font-size:17px;font-weight:600;color:#fff;background:var(--acc);border:0;border-radius:12px}
-#err{padding:30px 14px;text-align:center;color:#c33}
+:root{--bg:#f5f5f7;--card:#fff;--fg:#1c1c1e;--mut:#8e8e93;--line:#ececf0;--acc:#2f7de1;--accfg:#fff;--ok:#2fa84f;--soft:#eaf2fd;--r:16px}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#1a1d23;--fg:#f2f2f5;--mut:#8b919c;--line:#262a32;--acc:#4a93ec;--soft:#1b2a3f;--ok:#41c262}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;overflow-x:hidden}
+body{background:var(--bg);color:var(--fg);font:16px/1.35 -apple-system,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;padding-bottom:110px;min-height:100vh}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px}
+h1{font-size:26px;font-weight:700;margin:22px 0 2px;letter-spacing:-.4px}
+.sub{color:var(--mut);font-size:14px;margin-bottom:18px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{background:var(--card);border-radius:var(--r);padding:18px 16px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid var(--line);cursor:pointer;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.tile:active{transform:scale(.98)}
+.tile .ic{font-size:30px;line-height:1}
+.tile b{font-size:17px;font-weight:650}
+.tile small{color:var(--mut);font-size:13px;display:block;margin-top:2px}
+.tile .ck{position:absolute;right:12px;top:12px;width:24px;height:24px;border-radius:50%;background:var(--ok);color:#fff;font-size:14px;display:none;align-items:center;justify-content:center}
+.tile.done .ck{display:flex}
+.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0 8px}
+.bar{display:flex;align-items:center;gap:10px}
+.back{border:0;background:var(--card);color:var(--acc);width:38px;height:38px;border-radius:50%;font-size:20px;border:1px solid var(--line)}
+.bar h2{margin:0;font-size:21px;font-weight:700;flex:1}
+.cnt{color:var(--mut);font-size:14px}
+.search{width:100%;margin-top:10px;padding:11px 14px;font-size:16px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);outline:none}
+.list{background:var(--card);border-radius:var(--r);border:1px solid var(--line);overflow:hidden;margin-top:10px}
+.row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row.on{background:var(--soft)}
+.nm{flex:1;min-width:0;font-weight:560}
+.us{color:var(--mut);font-size:12px;font-weight:400;margin-top:1px}
+.row input{width:86px;padding:10px 6px;font-size:19px;text-align:center;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--fg);outline:none;font-weight:600}
+.row.on input{border-color:var(--acc);background:var(--card)}
+.more{margin:14px 2px;color:var(--acc);font-size:15px;background:none;border:0;padding:6px 0}
+.free{display:flex;gap:8px;margin-top:8px}
+.free input{padding:11px;font-size:16px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);outline:none}
+.free .fn{flex:1;min-width:0}.free .fq{width:86px;text-align:center}
+textarea{width:100%;min-height:64px;padding:12px;font-size:16px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);outline:none;margin-top:10px;font-family:inherit}
+.cta{position:fixed;left:0;right:0;bottom:0;padding:12px 16px max(16px,env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 35%)}
+.cta button{display:block;width:100%;max-width:560px;margin:0 auto;padding:16px;font-size:17px;font-weight:650;color:var(--accfg);background:var(--acc);border:0;border-radius:14px;box-shadow:0 4px 14px rgba(47,125,225,.3)}
+.cta button:disabled{opacity:.45;box-shadow:none}
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--line);margin-bottom:12px;overflow:hidden}
+.card.off{opacity:.55}
+.ch{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+.ch .ic{font-size:26px}.ch .t{flex:1}.ch .t b{font-size:17px}.ch .t small{display:block;color:var(--mut);font-size:13px}
+.chk{width:26px;height:26px;border-radius:8px;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;flex:none}
+.chk.on{background:var(--acc);border-color:var(--acc)}
+.body{display:none;border-top:1px solid var(--line)}
+.card.open .body{display:block}
+.empty{padding:40px 10px;text-align:center;color:var(--mut)}
+.note{padding:10px 16px;font-size:13px;color:var(--mut);background:var(--soft)}
+#err{padding:60px 20px;text-align:center;color:var(--mut)}
 </style>
 </head>
 <body>
-<header><h1 id="t">Заявка</h1><div class="sub" id="s"></div><input id="q" type="search" placeholder="Найти в списке" autocomplete="off"></header>
-<div id="list"></div>
-<div class="add"><button id="more">+ Добавить то, чего нет в списке</button></div>
-<div id="free"></div>
-<div class="note"><textarea id="note" placeholder="Комментарий (необязательно)"></textarea></div>
-<button id="send">Отправить заявку</button>
+<div class="wrap" id="app"></div>
+<div class="cta" id="cta" style="display:none"><button id="go"></button></div>
 <script>
+const CAT={"ПОВАР":{"title":"Кухня","items":[["РАВГАН","4"],["СМЕТАНА","2"],["ЧАККА","10"],["ПИЁЗ","50"],["СЫР ЛЕН","1"],["МАЙОНЕЗ","4"],["КАРТОШКА ЧИПСЫ","100"],["БЕДОНА КАЛОН","5"],["БЕДОНА МАЙДА","5"],["ПАПРИКА ШИРИН","1"],["СЫР ФИТАКСА","1"],["ТУХМ","1"],["ШАФТОЛУ 2 НАМУД","1"],["РОЛТОН КУР","15"],["СЫР ПАРМЕЗАН","1"],["ЩЕДРОЕ ЛЕТО","1"],["БЕЛИЗНА","10"],["БАКЛА","5"],["КАРТОШКА","80"],["ЗИРА","1"],["ТОМАТ","1"],["МАТИАС","2"],["ТЕЛЯЧИ","1"],["ЛАВАШ КУХНЯ","50"],["ГРИБЫ","10"],["СВЕКЛА","10"],["КАПУСТ","1"],["ТУХМ БЕДОНА","3"],["ПИЁЗ СУРХ","50"],["БОЛГАРИ САБЗ","10"],["БОЛГАРИ СУРХ","15"],["СЛИВКИ","2"],["ДОРУИ ГУШТ","5"],["КУРИНЫЙ","1"],["САЛЯМИ","1"],["АНЗУР","1"],["БИРИНЧ","5"],["ИНДЕЙКА","1"],["ПАПРИКА ТЕЗ","1"],["ПАПРИКА","1"],["ЧОРМАГЗ","0,5"],["БЕЛЫЙ АМУР","5"],["ТУХМИ ГАШНИЧ","1"],["ОЛИВКОВОЕ МАСЛО","1"],["СТРЕЙЧ","1"],["СЫРНЫЙ АССОРТИ","1"],["НАХУТ","5"],["САЗАН","5"],["ОСВЕЖИТЕЛЬ","10"],["ЗАНЧАБИЛ","5"],["СИМАК","4"],["КАРБОС","1"],["ЧЕРНОСЛИВ","0,2"],["ЗИРА МАЙДА","1"],["ЯБЛОЧНЫЙ УКСУС","5"],["ГУБКА","2"],["КАБАЧОК","5"],["СОДА","10"],["АДЖИКА","5"],["МОХИ САЗАН","5"],["НАМАКИ ОШИ","10"]]},"МАНГАЛ":{"title":"Мангал","items":[["ЛАВАШ МАНГАЛ","50"],["ХЛЕБ ЧЕРНЫЙ","30"],["ХЛЕБ СЕРЫЙ","20"],["МУРГ","40"],["ПИЁЗ","50"],["САПЕДА","2"],["КОРЕЙКА ГОВ","9"],["КОРЕЙКА 20КГ","15"],["БУМАГА","1"],["БАРАЧА 50КГ","50"],["РОН ГОВ","10"],["РОН 5ТА","25"],["ХУА ХУА","1"],["КЕТЧУП","10"],["СПИНКА 10КГ","10"],["ПАПРИКА ШИРИН","1"],["КРЫЛЫШКИ","10"],["ФОЛЬГА","1"],["ЗИРА","1"],["БАРАЧА 60КГ","60"],["ТУШКА","10"],["ПАКЕТ КАЛОН МАЙДА","1"],["ДУМБА 5КГ","5"],["РОН 4ТА","20"],["МУРЧ","1"],["СОЯ","5"],["КОРЕЙКА 15КГ","15"],["КУР ФИЛЕ","10"],["ПИЁЗ СУРХ","50"],["ОСТРЫЙ СОУС","1"],["КОРЕЙКА ГОВ 8КГ","8"],["РАХША","10"],["ПАПРИКА ТЕЗ","1"],["РОН 6ТА","30"],["ЧИГАР 2КГ","2"],["ЧИГАР 3КГ","3"],["СИРКА 10КГ","10"],["БАТОН","20"],["СПИНКА 20КГ","18"],["РОН ГОВ БИЁР","10"],["КОРОБКА 7КГ","7"]]},"САЛАТ":{"title":"Салат","items":[["ПОМИДОР САХТ","80"],["ГАШНИЧ","40"],["УКРОП","60"],["ЩАВЕЛЬ","50"],["РАЙХОН","20"],["БОДИРИНГ","25"],["ПЕТРУШКА","15"],["С.ЛИСТ","20"],["ПИЁЗ","20"],["МАСЛИНЫ","2"],["ОЛИВКИ","2"],["ГОРОШЕК","6"],["СОЛЕНЫЙ","2"],["ПУДИНА","10"],["ТОМАТ","1"],["ПЕКИНСКИЙ","1"],["РЕДИСКА","5"],["БОЛГАРИ САБЗ","10"],["БОЛГАРИ СУРХ","15"],["САБЗИ","20"],["КАПУСТ СУРХ","1"],["КУКУРУЗА","2"],["ПАПРИКА","1"],["САЛАТ САБЗИ","3"],["КОРНИШОН","4"],["ЧЕСНОК","5"],["САЛАТ КАПУСТ","3"],["КАПУСТ САФЕД","1"],["ЧЕРИ","4"],["СОЛЕНЫЙ КОРНИШОН","2"],["САЛАТ БОДИРИНГ 2 НАМУД","6"]]},"БАР":{"title":"Бар","items":[["ЛИМОН","10"],["ЧЕНДЖ","1"],["ГОСТ","15"],["ЛЕЙС","20"],["ЧАЙ ЧЕРНЫЙ","1"],["КОКА КОЛА","24"],["КУРУТ","2"],["КИРИЕШКИ","60"],["XL","24"],["РЕД","1"],["КИНОВСКИЙ","3"],["ЗАЖИГАЛКА","1"],["СТРАЙК","4"],["ВЛАЖНЫЙ","1"],["ЧАЙ ЗЕЛЕНЫЙ","3"],["БОРДЖОМИ","12"],["АНГУР","1"],["НАТАХТАРИ","20"],["ТАРБУЗ","5"],["ШАКАР","10"],["ГЕЛОС","4"],["ГОРИЛА","24"],["ПИСТА","2"],["БАЛТИКА 0","4"],["БАД","20"],["НОК","2"],["ЛАНЧ БОКС","1"],["СВЕТАФОР","1"],["МИЛЛЕР","6"],["КИНДЗ","3"],["АРЧА ПРЕМИУМ","9"],["БАНАН","10"],["СЕБ 2 НАМУД","1"],["ЗАРДЧУБА","1"],["ДЖЕЙМСОН","1"],["КИВИ МАРИНОВКА","4"],["БОРЖОМИ","12"],["КАЛАМФУР","5"],["ЧИСТЫЕ РОСЫ","2"],["ЯГУАР","4"],["ЧИВАС 12","1"],["ХАЙНИКЕН","6"],["КЛУБНИКА","1"],["КУЛЛЕР","6"],["АПЕЛЬСИН","2"],["ХАРБУЗА","5"],["АНЧИР","1"],["РАФАЭЛЛО","4"],["ДЖЕК","1"],["БАЛТИКА 7","5"],["КОФЕ НА КОНЬЯКЕ","2"],["МЯГКОВ","2"],["ЕЖЕВИКА","1"],["ЧИВАС 18","1"],["ЦИНАНДАЛИ","2"],["ПАКЕТ СИЁХ 50С","1"],["МЕНТОС МЯТНЫЙ","1"],["МЕНТОС ФРУКТОВЫЙ","1"],["ШОКОЛАД АССОРТИ","10"],["МАНДАРИН","2"],["АСАЛ","1"],["ДУША МОНАХА","1,5"],["САПЕРАВИ","2"]]}};
 const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.ready();tg.expand();}
-const $=id=>document.getElementById(id);
+const $=s=>document.querySelector(s);
+const app=$('#app'),cta=$('#cta'),go=$('#go');
+const ICON={'ПОВАР':'🍳','МАНГАЛ':'🔥','САЛАТ':'🥗','БАР':'🍹'};
 function b64u(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
-async function load(){
-  const h=location.hash.replace(/^#/,'');const m=h.match(/(?:^|&)z=([^&]+)/);
-  if(!m)throw 'Нет данных. Откройте заявку кнопкой в боте.';
-  const raw=b64u(m[1]);let txt;
-  if(h.indexOf('c=0')>=0){txt=new TextDecoder().decode(raw)}
-  else{
-    if(!window.DecompressionStream)throw 'Обновите Telegram и откройте заявку снова.';
-    const ds=new DecompressionStream('deflate-raw');const w=ds.writable.getWriter();w.write(raw);w.close();
-    txt=await new Response(ds.readable).text();
-  }
-  return JSON.parse(txt);
-}
+async function inflate(z){const ds=new DecompressionStream('deflate-raw');const w=ds.writable.getWriter();w.write(b64u(z));w.close();return JSON.parse(await new Response(ds.readable).text())}
 function num(v){v=String(v).replace(',','.').trim();const n=parseFloat(v);return isFinite(n)&&n>0?n:null}
+function fmt(q){return Number.isInteger(q)?String(q):String(q).replace('.',',')}
+function el(h){const d=document.createElement('div');d.innerHTML=h.trim();return d.firstChild}
+function send(o){const s=JSON.stringify(o);if(tg)tg.sendData(s);else alert(s)}
+function ls(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||'null');localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+
+/* ---------- сотрудник ---------- */
+function staffHome(date){
+  cta.style.display='none';app.innerHTML='';
+  app.append(el(`<h1>Заявка</h1>`),el(`<div class="sub">На ${date} · выберите свой пост</div>`));
+  const g=el('<div class="tiles"></div>');
+  Object.keys(CAT).forEach(p=>{
+    const sent=ls('sent:'+p+':'+date);
+    const t=el(`<div class="tile${sent?' done':''}"><div class="ck">✓</div><div class="ic">${ICON[p]||'📦'}</div><div><b>${CAT[p].title}</b><small>${sent?('отправлено · '+sent+' поз.'):(CAT[p].items.length+' позиций')}</small></div></div>`);
+    t.onclick=()=>staffPost(p,date);g.append(t)});
+  app.append(g);
+}
+function staffPost(p,date){
+  const C=CAT[p],key='form:'+p+':'+date,saved=ls(key)||{};
+  app.innerHTML='';
+  const top=el(`<div class="top"><div class="bar"><button class="back">‹</button><h2>${C.title}</h2><span class="cnt" id="cnt"></span></div><input class="search" type="search" placeholder="Найти" autocomplete="off"></div>`);
+  app.append(top);
+  const list=el('<div class="list"></div>'),rows=[];
+  C.items.forEach(([name,usual])=>{
+    const r=el(`<div class="row"><div class="nm"><span></span><div class="us"></div></div><input type="text" inputmode="decimal" placeholder="—"></div>`);
+    r.querySelector('span').textContent=name;r.querySelector('.us').textContent=usual?('обычно '+usual):'';
+    const inp=r.querySelector('input');if(saved.i&&saved.i[name])inp.value=saved.i[name];
+    const o={name,r,inp};rows.push(o);inp.oninput=()=>{upd();store()};list.append(r)});
+  app.append(list);
+  const freeBox=el('<div></div>'),frees=[];
+  function addFree(n,q){const d=el('<div class="free"><input class="fn" placeholder="Другое: название"><input class="fq" inputmode="decimal" placeholder="кол-во"></div>');
+    const a=d.querySelector('.fn'),b=d.querySelector('.fq');a.value=n||'';b.value=q||'';a.oninput=b.oninput=()=>{upd();store()};freeBox.append(d);frees.push({a,b})}
+  ((saved.x)||[]).forEach(f=>addFree(f[0],f[1]));
+  const more=el('<button class="more">+ Добавить, чего нет в списке</button>');more.onclick=()=>addFree();
+  const note=el('<textarea placeholder="Комментарий (необязательно)"></textarea>');note.value=saved.n||'';note.oninput=store;
+  app.append(freeBox,more,note);
+  function collect(){const i={};rows.forEach(o=>{const n=num(o.inp.value);if(n!==null)i[o.name]=n});
+    const x=[];frees.forEach(f=>{const n=f.a.value.trim(),q=num(f.b.value);if(n&&q!==null)x.push([n,q])});return{i,x}}
+  function upd(){rows.forEach(o=>o.r.classList.toggle('on',num(o.inp.value)!==null));const c=collect(),n=Object.keys(c.i).length+c.x.length;
+    $('#cnt').textContent=n?('выбрано '+n):'';go.textContent=n?`Сохранить и отправить · ${n}`:'Ничего не нужно — отправить';}
+  function store(){const o={i:{},x:frees.map(f=>[f.a.value,f.b.value]),n:note.value};rows.forEach(r=>{if(r.inp.value)o.i[r.name]=r.inp.value});ls(key,o)}
+  top.querySelector('.back').onclick=()=>staffHome(date);
+  top.querySelector('.search').oninput=e=>{const v=e.target.value.toLowerCase().trim();rows.forEach(o=>{o.r.style.display=!v||o.name.toLowerCase().includes(v)?'':'none'})};
+  upd();cta.style.display='block';
+  go.disabled=false;
+  go.onclick=()=>{const c=collect(),n=Object.keys(c.i).length+c.x.length;
+    if(!n&&!confirm('Ничего не заполнено. Отправить, что ничего не нужно?'))return;
+    ls('sent:'+p+':'+date,n);send({p,d:date,i:c.i,x:c.x,n:note.value.trim()})};
+}
+
+/* ---------- владелец ---------- */
+function ownerView(D){
+  app.innerHTML='';
+  app.append(el(`<h1>Заявки постов</h1>`),el(`<div class="sub">На ${D.d} · проверьте и одобрите</div>`));
+  const picked={},state={};
+  Object.keys(CAT).forEach(p=>{
+    const s=D.s[p];const card=el(`<div class="card${s?'':' off'}"></div>`);
+    if(!s){card.append(el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${CAT[p].title}</b><small>ещё не прислали</small></div></div>`));app.append(card);return}
+    const n=Object.keys(s.i).length+(s.x||[]).length;picked[p]=true;state[p]={i:{...s.i},x:(s.x||[]).map(a=>[...a])};
+    const ch=el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${CAT[p].title}</b><small>${s.w||''} · ${s.t||''} · ${n} поз.</small></div><div class="chk on">✓</div></div>`);
+    const body=el('<div class="body"></div>');
+    const mk=(name,q,setq)=>{const r=el('<div class="row on"><div class="nm"></div><input type="text" inputmode="decimal"></div>');r.querySelector('.nm').textContent=name;const i=r.querySelector('input');i.value=fmt(q);i.oninput=()=>setq(num(i.value));body.append(r)};
+    Object.keys(s.i).forEach(k=>mk(k,s.i[k],v=>{if(v===null)delete state[p].i[k];else state[p].i[k]=v}));
+    (s.x||[]).forEach((a,idx)=>mk(a[0]+' (своя)',a[1],v=>{state[p].x[idx][1]=v}));
+    if(s.n){const nn=el('<div class="note"></div>');nn.textContent='💬 '+s.n;body.append(nn)}
+    const box=ch.querySelector('.chk');
+    box.onclick=e=>{e.stopPropagation();picked[p]=!picked[p];box.classList.toggle('on',picked[p]);card.classList.toggle('off',!picked[p]);updO()};
+    ch.onclick=()=>card.classList.toggle('open');
+    card.append(ch,body);app.append(card)});
+  function updO(){const k=Object.keys(picked).filter(p=>picked[p]).length;go.disabled=!k;go.textContent=k?`Одобрить и собрать · ${k}`:'Выберите заявки'}
+  updO();cta.style.display='block';
+  go.onclick=()=>{const s={};Object.keys(picked).filter(p=>picked[p]).forEach(p=>{const st=state[p];s[p]={i:st.i,x:st.x.filter(a=>a[1]!==null)}});send({a:1,d:D.d,s})};
+}
+
 (async()=>{
-  let D;try{D=await load()}catch(e){document.body.innerHTML='<div id="err">'+e+'</div>';return}
-  $('t').textContent='Заявка: '+D.t;$('s').textContent='На '+D.d+' · впишите, сколько нужно. Не нужно — оставьте пусто';
-  const key='zayavka:'+D.p+':'+D.d;let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch(e){}
-  const list=$('list'),rows=[];
-  function mark(r){r.el.classList.toggle('on',num(r.inp.value)!==null)}
-  D.i.forEach(([name,usual])=>{
-    const el=document.createElement('div');el.className='row';
-    el.innerHTML='<div class="nm"><b></b><div class="us"></div></div><input type="text" inputmode="decimal" placeholder="—">';
-    el.querySelector('b').textContent=name;el.querySelector('.us').textContent=usual?('обычно '+usual):'';
-    const inp=el.querySelector('input');if(saved[name])inp.value=saved[name];
-    const r={name,el,inp};rows.push(r);inp.addEventListener('input',()=>{mark(r);store()});mark(r);list.appendChild(el)});
-  const free=$('free');const frees=[];
-  function addFree(n,q){const d=document.createElement('div');d.className='free';d.innerHTML='<input class="fn" placeholder="Название"><input class="fq" inputmode="decimal" placeholder="кол-во">';
-    const a=d.querySelector('.fn'),b=d.querySelector('.fq');a.value=n||'';b.value=q||'';[a,b].forEach(x=>x.addEventListener('input',store));free.appendChild(d);frees.push({a,b})}
-  (saved.__free||[]).forEach(f=>addFree(f[0],f[1]));
-  $('more').onclick=()=>addFree();
-  $('note').value=saved.__note||'';$('note').addEventListener('input',store);
-  function collect(){const items={};rows.forEach(r=>{const n=num(r.inp.value);if(n!==null)items[r.name]=n});
-    const extra=[];frees.forEach(f=>{const n=f.a.value.trim(),q=num(f.b.value);if(n&&q!==null)extra.push([n,q])});return{items,extra}}
-  function store(){try{const o={};rows.forEach(r=>{if(r.inp.value)o[r.name]=r.inp.value});o.__free=frees.map(f=>[f.a.value,f.b.value]);o.__note=$('note').value;localStorage.setItem(key,JSON.stringify(o))}catch(e){}
-    const c=collect();$('send').textContent='Отправить заявку ('+(Object.keys(c.items).length+c.extra.length)+')'}
-  store();
-  $('q').addEventListener('input',e=>{const v=e.target.value.toLowerCase().trim();rows.forEach(r=>{r.el.style.display=!v||r.name.toLowerCase().includes(v)?'':'none'})});
-  $('send').onclick=()=>{const c=collect();const n=Object.keys(c.items).length+c.extra.length;
-    if(!n&&!confirm('Ничего не заполнено. Отправить пустую заявку (ничего не нужно)?'))return;
-    const payload=JSON.stringify({p:D.p,d:D.d,i:c.items,x:c.extra,n:$('note').value.trim()});
-    if(tg){tg.sendData(payload)}else{alert(payload)}};
+  const h=location.hash.replace(/^#/,'');
+  try{
+    if(h.startsWith('o=')){ if(!window.DecompressionStream)throw 'Обновите Telegram';ownerView(await inflate(h.slice(2)))}
+    else if(h.startsWith('s=')){staffHome(decodeURIComponent(h.slice(2)))}
+    else throw 'Откройте заявку кнопкой в боте.';
+  }catch(e){app.innerHTML='<div id="err">'+e+'</div>'}
 })();
 </script>
 </body>
