@@ -84,7 +84,7 @@ function staffInit(date,R){DATE=date;R0=R||{};Object.keys(CAT).forEach(p=>{const
 function toSend(){return Object.keys(CAT).filter(p=>filled(S[p])>0||R0[p])}
 function staffHome(){
   cta.style.display='none';app.innerHTML='';
-  app.append(el(`<h1>Заявка</h1>`),el(`<div class="sub">На ${DATE} · заполните свой пост и нажмите «Проверить и отправить». Пока не отправите, ничего не уйдёт</div>`));
+  app.append(el(`<h1>Заявка</h1>`),el(`<div class="sub">На ${DATE} · заполните свой пост, затем «Проверить и отправить»</div>`));
   const g=el('<div class="tiles"></div>');
   Object.keys(CAT).forEach(p=>{
     const n=filled(S[p]),was=R0[p]?true:false;
@@ -118,7 +118,7 @@ function staffPost(p){
   function store(){S[p]=cur();saveDraft(p)}
   top.querySelector('.back').onclick=()=>{store();staffHome()};
   top.querySelector('.search').oninput=e=>{const v=e.target.value.toLowerCase().trim();rows.forEach(o=>{o.r.style.display=!v||o.name.toLowerCase().includes(v)?'':'none'})};
-  upd();cta.style.display='block';go.disabled=false;go.textContent='Готово — к выбору поста';go.onclick=()=>{store();staffHome()};
+  upd();cta.style.display='block';go.disabled=false;go.textContent='Далее';go.onclick=()=>{store();staffHome()};
 }
 function staffReview(){
   const ps=toSend();app.innerHTML='';
