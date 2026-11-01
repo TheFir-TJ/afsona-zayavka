@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Заявка</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#fff;--fg:#111;--mut:#777;--line:#e4e4e4;--acc:#2481cc;--fill:#e8f3ff}
+@media (prefers-color-scheme:dark){:root{--bg:#17212b;--fg:#f1f1f1;--mut:#9aa7b3;--line:#2b3a49;--acc:#5aa9e6;--fill:#1f3a52}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.3 -apple-system,Segoe UI,Roboto,Arial,sans-serif;padding-bottom:90px}
+header{position:sticky;top:0;background:var(--bg);padding:10px 14px 8px;border-bottom:1px solid var(--line);z-index:2}
+h1{margin:0;font-size:19px}.sub{color:var(--mut);font-size:13px;margin-top:2px}
+#q{width:100%;margin-top:8px;padding:9px 11px;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
+.row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line)}
+.row.on{background:var(--fill)}
+.nm{flex:1;min-width:0}.nm b{font-weight:600}.us{color:var(--mut);font-size:12px}
+.row input{width:92px;padding:9px 8px;font-size:18px;text-align:center;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
+.row.on input{border-color:var(--acc)}
+.note{padding:12px 14px}.note textarea{width:100%;min-height:60px;padding:9px;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
+.add{padding:0 14px 6px}.add button{font-size:15px;color:var(--acc);background:none;border:0;padding:8px 0}
+.free{display:flex;gap:8px;padding:6px 14px}.free input{padding:9px;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
+.free .fn{flex:1;min-width:0}.free .fq{width:92px;text-align:center}
+#send{position:fixed;left:14px;right:14px;bottom:max(14px,env(safe-area-inset-bottom));padding:15px;font-size:17px;font-weight:600;color:#fff;background:var(--acc);border:0;border-radius:12px}
+#err{padding:30px 14px;text-align:center;color:#c33}
+</style>
+</head>
+<body>
+<header><h1 id="t">Заявка</h1><div class="sub" id="s"></div><input id="q" type="search" placeholder="Найти в списке" autocomplete="off"></header>
+<div id="list"></div>
+<div class="add"><button id="more">+ Добавить то, чего нет в списке</button></div>
+<div id="free"></div>
+<div class="note"><textarea id="note" placeholder="Комментарий (необязательно)"></textarea></div>
+<button id="send">Отправить заявку</button>
+<script>
+const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.ready();tg.expand();}
+const $=id=>document.getElementById(id);
+function b64u(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+async function load(){
+  const h=location.hash.replace(/^#/,'');const m=h.match(/(?:^|&)z=([^&]+)/);
+  if(!m)throw 'Нет данных. Откройте заявку кнопкой в боте.';
+  const raw=b64u(m[1]);let txt;
+  if(h.indexOf('c=0')>=0){txt=new TextDecoder().decode(raw)}
+  else{
+    if(!window.DecompressionStream)throw 'Обновите Telegram и откройте заявку снова.';
+    const ds=new DecompressionStream('deflate-raw');const w=ds.writable.getWriter();w.write(raw);w.close();
+    txt=await new Response(ds.readable).text();
+  }
+  return JSON.parse(txt);
+}
+function num(v){v=String(v).replace(',','.').trim();const n=parseFloat(v);return isFinite(n)&&n>0?n:null}
+(async()=>{
+  let D;try{D=await load()}catch(e){document.body.innerHTML='<div id="err">'+e+'</div>';return}
+  $('t').textContent='Заявка: '+D.t;$('s').textContent='На '+D.d+' · впишите, сколько нужно. Не нужно — оставьте пусто';
+  const key='zayavka:'+D.p+':'+D.d;let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch(e){}
+  const list=$('list'),rows=[];
+  function mark(r){r.el.classList.toggle('on',num(r.inp.value)!==null)}
+  D.i.forEach(([name,usual])=>{
+    const el=document.createElement('div');el.className='row';
+    el.innerHTML='<div class="nm"><b></b><div class="us"></div></div><input type="text" inputmode="decimal" placeholder="—">';
+    el.querySelector('b').textContent=name;el.querySelector('.us').textContent=usual?('обычно '+usual):'';
+    const inp=el.querySelector('input');if(saved[name])inp.value=saved[name];
+    const r={name,el,inp};rows.push(r);inp.addEventListener('input',()=>{mark(r);store()});mark(r);list.appendChild(el)});
+  const free=$('free');const frees=[];
+  function addFree(n,q){const d=document.createElement('div');d.className='free';d.innerHTML='<input class="fn" placeholder="Название"><input class="fq" inputmode="decimal" placeholder="кол-во">';
+    const a=d.querySelector('.fn'),b=d.querySelector('.fq');a.value=n||'';b.value=q||'';[a,b].forEach(x=>x.addEventListener('input',store));free.appendChild(d);frees.push({a,b})}
+  (saved.__free||[]).forEach(f=>addFree(f[0],f[1]));
+  $('more').onclick=()=>addFree();
+  $('note').value=saved.__note||'';$('note').addEventListener('input',store);
+  function collect(){const items={};rows.forEach(r=>{const n=num(r.inp.value);if(n!==null)items[r.name]=n});
+    const extra=[];frees.forEach(f=>{const n=f.a.value.trim(),q=num(f.b.value);if(n&&q!==null)extra.push([n,q])});return{items,extra}}
+  function store(){try{const o={};rows.forEach(r=>{if(r.inp.value)o[r.name]=r.inp.value});o.__free=frees.map(f=>[f.a.value,f.b.value]);o.__note=$('note').value;localStorage.setItem(key,JSON.stringify(o))}catch(e){}
+    const c=collect();$('send').textContent='Отправить заявку ('+(Object.keys(c.items).length+c.extra.length)+')'}
+  store();
+  $('q').addEventListener('input',e=>{const v=e.target.value.toLowerCase().trim();rows.forEach(r=>{r.el.style.display=!v||r.name.toLowerCase().includes(v)?'':'none'})});
+  $('send').onclick=()=>{const c=collect();const n=Object.keys(c.items).length+c.extra.length;
+    if(!n&&!confirm('Ничего не заполнено. Отправить пустую заявку (ничего не нужно)?'))return;
+    const payload=JSON.stringify({p:D.p,d:D.d,i:c.items,x:c.extra,n:$('note').value.trim()});
+    if(tg){tg.sendData(payload)}else{alert(payload)}};
+})();
+</script>
+</body>
+</html>
