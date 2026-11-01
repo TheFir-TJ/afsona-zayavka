@@ -238,6 +238,14 @@ function edTab(p){
   const addg=el('<button class="more">+ Новая группа</button>');addg.onclick=()=>{const n=prompt('Название группы');if(n&&n.trim()){const it={name:'',sec:'ПРОЧЕЕ',price:null,usual:null,group:n.trim(),xname:''};E[p].push(it);edSheet(p,it,true)}};
   app.append(addg);
   go2.style.display='none';cta.style.display='block';updSave();go.onclick=edSave;
+  // «Далее ↓»: пока курсор в поле цены — переход к цене следующего товара (клавиатура не закрывается)
+  go2.textContent='Далее ↓';go2.onpointerdown=e=>e.preventDefault();
+  go2.onclick=()=>{const a=rowsAll.filter(o=>o.r.style.display!=='none').map(o=>o.r.querySelector('input'));
+    const i=a.indexOf(document.activeElement),n=a[i+1];
+    if(n){n.focus();n.select&&n.select();n.scrollIntoView({block:'center',behavior:'smooth'})}else if(document.activeElement)document.activeElement.blur()};
+  if(!window._edL){window._edL=1;
+    app.addEventListener('focusin',e=>{if(e.target.matches&&e.target.matches('.erow input'))go2.style.display='block'});
+    app.addEventListener('focusout',()=>setTimeout(()=>{const x=document.activeElement;if(!x||!x.matches||!x.matches('.erow input'))go2.style.display='none'},200))}
   window.scrollTo(0,edScroll);
 }
 function edKeep(p){edScroll=window.scrollY;edTab(p)}
