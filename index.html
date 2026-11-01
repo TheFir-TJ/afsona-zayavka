@@ -75,18 +75,18 @@ function send(o){const s=JSON.stringify(o);if(tg)tg.sendData(s);else alert(s)}
 function ls(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||'null');localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
 
 /* ---------- сотрудник ---------- */
-function staffHome(date){
+function staffHome(date,R){R=R||{};
   cta.style.display='none';app.innerHTML='';
   app.append(el(`<h1>Заявка</h1>`),el(`<div class="sub">На ${date} · выберите свой пост</div>`));
   const g=el('<div class="tiles"></div>');
   Object.keys(CAT).forEach(p=>{
-    const sent=ls('sent:'+p+':'+date);
-    const t=el(`<div class="tile${sent?' done':''}"><div class="ck">✓</div><div class="ic">${ICON[p]||'📦'}</div><div><b>${CAT[p].title}</b><small>${sent?('отправлено · '+sent+' поз.'):(CAT[p].items.length+' позиций')}</small></div></div>`);
-    t.onclick=()=>staffPost(p,date);g.append(t)});
+    const sent=R[p]?(Object.keys(R[p].i).length+(R[p].x||[]).length):ls('sent:'+p+':'+date);
+    const t=el(`<div class="tile${sent!==null&&sent!==undefined?' done':''}"><div class="ck">✓</div><div class="ic">${ICON[p]||'📦'}</div><div><b>${CAT[p].title}</b><small>${sent!==null&&sent!==undefined?('отправлено · '+sent+' поз.'):(CAT[p].items.length+' позиций')}</small></div></div>`);
+    t.onclick=()=>staffPost(p,date,R);g.append(t)});
   app.append(g);
 }
-function staffPost(p,date){
-  const C=CAT[p],key='form:'+p+':'+date,saved=ls(key)||{};
+function staffPost(p,date,R){R=R||{};
+  const C=CAT[p],key='form:'+p+':'+date,saved=R[p]?{i:R[p].i,x:R[p].x,n:R[p].n}:(ls(key)||{});
   app.innerHTML='';
   const top=el(`<div class="top"><div class="bar"><button class="back">‹</button><h2>${C.title}</h2><span class="cnt" id="cnt"></span></div><input class="search" type="search" placeholder="Найти" autocomplete="off"></div>`);
   app.append(top);
@@ -109,7 +109,7 @@ function staffPost(p,date){
   function upd(){rows.forEach(o=>o.r.classList.toggle('on',num(o.inp.value)!==null));const c=collect(),n=Object.keys(c.i).length+c.x.length;
     $('#cnt').textContent=n?('выбрано '+n):'';go.textContent=n?`Сохранить и отправить · ${n}`:'Ничего не нужно — отправить';}
   function store(){const o={i:{},x:frees.map(f=>[f.a.value,f.b.value]),n:note.value};rows.forEach(r=>{if(r.inp.value)o.i[r.name]=r.inp.value});ls(key,o)}
-  top.querySelector('.back').onclick=()=>staffHome(date);
+  top.querySelector('.back').onclick=()=>staffHome(date,R);
   top.querySelector('.search').oninput=e=>{const v=e.target.value.toLowerCase().trim();rows.forEach(o=>{o.r.style.display=!v||o.name.toLowerCase().includes(v)?'':'none'})};
   upd();cta.style.display='block';
   go.disabled=false;
@@ -146,7 +146,7 @@ function ownerView(D){
   const h=location.hash.replace(/^#/,'');
   try{
     if(h.startsWith('o=')){ if(!window.DecompressionStream)throw 'Обновите Telegram';ownerView(await inflate(h.slice(2)))}
-    else if(h.startsWith('s=')){staffHome(decodeURIComponent(h.slice(2)))}
+    else if(h.startsWith('s=')){const m=h.match(/^s=([^&]*)(?:&r=(.*))?$/);let R={};if(m[2]&&window.DecompressionStream){try{R=await inflate(m[2])}catch(e){}}staffHome(decodeURIComponent(m[1]),R)}
     else throw 'Откройте заявку кнопкой в боте.';
   }catch(e){app.innerHTML='<div id="err">'+e+'</div>'}
 })();
