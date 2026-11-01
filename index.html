@@ -58,6 +58,22 @@ textarea{width:100%;min-height:64px;padding:12px;font-size:16px;border:1px solid
 .card.open .body{display:block}
 .empty{padding:40px 10px;text-align:center;color:var(--mut)}
 .note{padding:10px 16px;font-size:13px;color:var(--mut);background:var(--soft)}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px}
+.tab{flex:none;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:9px 13px;border-radius:12px;font-size:15px}
+.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.egh{display:flex;align-items:center;justify-content:space-between;padding:14px 4px 6px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mut)}
+.egh .gb button{border:1px solid var(--line);background:var(--card);color:var(--acc);border-radius:9px;padding:5px 9px;margin-left:5px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500}
+.erow .nm{cursor:pointer}
+.erow input{width:84px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end}
+.sheet{width:100%;max-width:560px;margin:0 auto;background:var(--bg);border-radius:20px 20px 0 0;padding:16px 16px max(18px,env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
+.sheet h3{margin:0 0 10px;font-size:18px}
+.sheet label{display:block;font-size:12px;color:var(--mut);margin:8px 0}
+.sheet input,.sheet select{display:block;width:100%;margin-top:4px;padding:11px;font-size:16px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);outline:none}
+.two2{display:flex;gap:10px;margin-top:6px}.two2>*{flex:1}
+.sheet button{padding:13px;font-size:16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);margin-top:8px}
+.sheet .okb{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:650}
+.sheet .danger{color:#e5484d}
 #err{padding:60px 20px;text-align:center;color:var(--mut)}
 </style>
 </head>
@@ -65,7 +81,7 @@ textarea{width:100%;min-height:64px;padding:12px;font-size:16px;border:1px solid
 <div class="wrap" id="app"></div>
 <div class="cta" id="cta" style="display:none"><div class="two"><button id="go2" style="display:none"></button><button id="go"></button></div></div>
 <script>
-const CAT={"ПОВАР":{"title":"Кухня","items":[["ПИЁЗ","50","Овощи"],["КАРТОШКА ЧИПСЫ","100","Овощи"],["БАКЛА","5","Овощи"],["КАРТОШКА","80","Овощи"],["ТОМАТ","1","Овощи"],["ГРИБЫ","10","Овощи"],["СВЕКЛА","10","Овощи"],["КАПУСТ","1","Овощи"],["ПИЁЗ СУРХ","50","Овощи"],["БОЛГАРИ САБЗ","10","Овощи"],["БОЛГАРИ СУРХ","15","Овощи"],["БИРИНЧ","5","Овощи"],["КАБАЧОК","5","Овощи"],["РАВГАН","4","Молочное и сыры"],["СМЕТАНА","2","Молочное и сыры"],["ЧАККА","10","Молочное и сыры"],["СЫР ЛЕН","1","Молочное и сыры"],["СЫР ФИТАКСА","1","Молочное и сыры"],["ЩЕДРОЕ ЛЕТО","1","Молочное и сыры"],["СЫР ПАРМЕЗАН","1","Молочное и сыры"],["СЛИВКИ","2","Молочное и сыры"],["СЫРНЫЙ АССОРТИ","1","Молочное и сыры"],["БЕДОНА КАЛОН","5","Яйца и птица"],["БЕДОНА МАЙДА","5","Яйца и птица"],["ТУХМ","1","Яйца и птица"],["РОЛТОН КУР","15","Яйца и птица"],["ТУХМ БЕДОНА","3","Яйца и птица"],["КУРИНЫЙ","1","Яйца и птица"],["ИНДЕЙКА","1","Яйца и птица"],["МАТИАС","2","Мясо и рыба"],["ТЕЛЯЧИ","1","Мясо и рыба"],["ДОРУИ ГУШТ","5","Мясо и рыба"],["САЛЯМИ","1","Мясо и рыба"],["АНЗУР","1","Мясо и рыба"],["ЧОРМАГЗ","0,5","Мясо и рыба"],["БЕЛЫЙ АМУР","5","Мясо и рыба"],["САЗАН","5","Мясо и рыба"],["МОХИ САЗАН","5","Мясо и рыба"],["ЛАВАШ КУХНЯ","50","Хлеб"],["МАЙОНЕЗ","4","Соусы и масло"],["ОЛИВКОВОЕ МАСЛО","1","Соусы и масло"],["ЯБЛОЧНЫЙ УКСУС","5","Соусы и масло"],["АДЖИКА","5","Соусы и масло"],["ПАПРИКА ШИРИН","1","Специи и сухое"],["ШАФТОЛУ 2 НАМУД","1","Специи и сухое"],["ЗИРА","1","Специи и сухое"],["ПАПРИКА ТЕЗ","1","Специи и сухое"],["ПАПРИКА","1","Специи и сухое"],["ТУХМИ ГАШНИЧ","1","Специи и сухое"],["НАХУТ","5","Специи и сухое"],["ЗАНЧАБИЛ","5","Специи и сухое"],["ЗИРА МАЙДА","1","Специи и сухое"],["ЧЕРНОСЛИВ","0,2","Специи и сухое"],["СОДА","10","Специи и сухое"],["НАМАКИ ОШИ","10","Специи и сухое"],["БЕЛИЗНА","10","Хозяйство"],["СТРЕЙЧ","1","Хозяйство"],["ОСВЕЖИТЕЛЬ","10","Хозяйство"],["СИМАК","4","Хозяйство"],["КАРБОС","1","Хозяйство"],["ГУБКА","2","Хозяйство"]]},"МАНГАЛ":{"title":"Мангал","items":[["КОРЕЙКА ГОВ","9","Мясо"],["КОРЕЙКА 20КГ","15","Мясо"],["БАРАЧА 50КГ","50","Мясо"],["РОН ГОВ","10","Мясо"],["РОН 5ТА","25","Мясо"],["СПИНКА 10КГ","10","Мясо"],["БАРАЧА 60КГ","60","Мясо"],["ДУМБА 5КГ","5","Мясо"],["РОН 4ТА","20","Мясо"],["КОРЕЙКА 15КГ","15","Мясо"],["КОРЕЙКА ГОВ 8КГ","8","Мясо"],["РОН 6ТА","30","Мясо"],["ЧИГАР 2КГ","2","Мясо"],["ЧИГАР 3КГ","3","Мясо"],["СИРКА 10КГ","10","Мясо"],["СПИНКА 20КГ","18","Мясо"],["РОН ГОВ БИЁР","10","Мясо"],["КОРОБКА 7КГ","7","Мясо"],["МУРГ","40","Курица"],["КРЫЛЫШКИ","10","Курица"],["КУР ФИЛЕ","10","Курица"],["ЛАВАШ МАНГАЛ","50","Хлеб"],["ХЛЕБ ЧЕРНЫЙ","30","Хлеб"],["ХЛЕБ СЕРЫЙ","20","Хлеб"],["БАТОН","20","Хлеб"],["ПИЁЗ","50","Лук, соусы, специи"],["ХУА ХУА","1","Лук, соусы, специи"],["КЕТЧУП","10","Лук, соусы, специи"],["ПАПРИКА ШИРИН","1","Лук, соусы, специи"],["ЗИРА","1","Лук, соусы, специи"],["СОЯ","5","Лук, соусы, специи"],["МУРЧ","1","Лук, соусы, специи"],["ПИЁЗ СУРХ","50","Лук, соусы, специи"],["ОСТРЫЙ СОУС","1","Лук, соусы, специи"],["ПАПРИКА ТЕЗ","1","Лук, соусы, специи"],["САПЕДА","2","Хозяйство"],["БУМАГА","1","Хозяйство"],["ФОЛЬГА","1","Хозяйство"],["ТУШКА","10","Хозяйство"],["ПАКЕТ КАЛОН МАЙДА","1","Хозяйство"],["РАХША","10","Хозяйство"]]},"САЛАТ":{"title":"Салат","items":[["ГАШНИЧ","40","Зелень"],["УКРОП","60","Зелень"],["ЩАВЕЛЬ","50","Зелень"],["РАЙХОН","20","Зелень"],["ПЕТРУШКА","15","Зелень"],["С.ЛИСТ","20","Зелень"],["ПИЁЗ ЗЕЛЕНЫЙ","20","Зелень"],["ПУДИНА","10","Зелень"],["САБЗИ","20","Зелень"],["ЧЕСНОК","5","Зелень"],["ПОМИДОР САХТ","80","Овощи"],["БОДИРИНГ","25","Овощи"],["ТОМАТ","1","Овощи"],["ПЕКИНСКИЙ","1","Овощи"],["РЕДИСКА","5","Овощи"],["БОЛГАРИ САБЗ","10","Овощи"],["БОЛГАРИ СУРХ","15","Овощи"],["КАПУСТ СУРХ","1","Овощи"],["ПАПРИКА","1","Овощи"],["КАПУСТ САФЕД","1","Овощи"],["ЧЕРИ","4","Овощи"],["САЛАТ САБЗИ","3","Готовые салаты"],["САЛАТ КАПУСТ","3","Готовые салаты"],["САЛАТ БОДИРИНГ 2 НАМУД","6","Готовые салаты"],["МАСЛИНЫ","2","Консервы и соленья"],["ОЛИВКИ","2","Консервы и соленья"],["ГОРОШЕК","6","Консервы и соленья"],["СОЛЕНЫЙ","2","Консервы и соленья"],["КУКУРУЗА","2","Консервы и соленья"],["КОРНИШОН","4","Консервы и соленья"],["СОЛЕНЫЙ КОРНИШОН","2","Консервы и соленья"]]},"БАР":{"title":"Бар","items":[["ДЖЕЙМСОН","1","Алкоголь крепкий"],["ЧИСТЫЕ РОСЫ","2","Алкоголь крепкий"],["ЧИВАС 12","1","Алкоголь крепкий"],["ДЖЕК","1","Алкоголь крепкий"],["ЧИВАС 18","1","Алкоголь крепкий"],["ГОСТ","15","Пиво"],["БАЛТИКА 0","4","Пиво"],["БАД","20","Пиво"],["МИЛЛЕР","6","Пиво"],["АРЧА ПРЕМИУМ","9","Пиво"],["ХАЙНИКЕН","6","Пиво"],["КУЛЛЕР","6","Пиво"],["БАЛТИКА 7","5","Пиво"],["КОФЕ НА КОНЬЯКЕ","2","Вино и другое"],["МЯГКОВ","2","Вино и другое"],["ЦИНАНДАЛИ","2","Вино и другое"],["САПЕРАВИ","2","Вино и другое"],["ДУША МОНАХА","1,5","Вино и другое"],["ЧЕНДЖ","1","Напитки"],["КОКА КОЛА","24","Напитки"],["XL","24","Напитки"],["РЕД","1","Напитки"],["СТРАЙК","4","Напитки"],["БОРДЖОМИ","12","Напитки"],["НАТАХТАРИ","20","Напитки"],["ГОРИЛА","24","Напитки"],["ЯГУАР","4","Напитки"],["ЛЕЙС","20","Закуски"],["КУРУТ","2","Закуски"],["КИРИЕШКИ","60","Закуски"],["ПИСТА","2","Закуски"],["РАФАЭЛЛО","4","Закуски"],["МЕНТОС МЯТНЫЙ","1","Закуски"],["МЕНТОС ФРУКТОВЫЙ","1","Закуски"],["ШОКОЛАД АССОРТИ","10","Закуски"],["ЛИМОН","10","Фрукты"],["АНГУР","1","Фрукты"],["ТАРБУЗ","5","Фрукты"],["ГЕЛОС","4","Фрукты"],["НОК","2","Фрукты"],["СВЕТАФОР","1","Фрукты"],["БАНАН","10","Фрукты"],["СЕБ 2 НАМУД","1","Фрукты"],["ЗАРДЧУБА","1","Фрукты"],["КИВИ МАРИНОВКА","4","Фрукты"],["КАЛАМФУР","5","Фрукты"],["КЛУБНИКА","1","Фрукты"],["АПЕЛЬСИН","2","Фрукты"],["ХАРБУЗА","5","Фрукты"],["АНЧИР","1","Фрукты"],["ЕЖЕВИКА","1","Фрукты"],["МАНДАРИН","2","Фрукты"],["ЧАЙ ЧЕРНЫЙ","1","Чай, сахар"],["ЧАЙ ЗЕЛЕНЫЙ","3","Чай, сахар"],["ШАКАР","10","Чай, сахар"],["АСАЛ","1","Чай, сахар"],["ЗАЖИГАЛКА","1","Хозяйство"],["ВЛАЖНЫЙ","1","Хозяйство"],["ЛАНЧ БОКС","1","Хозяйство"],["ПАКЕТ СИЁХ 50С","1","Хозяйство"],["КИНОВСКИЙ","3","Другое"],["КИНДЗ","3","Другое"]]}};
+let CAT={};const TITLES={'ПОВАР':'Кухня','МАНГАЛ':'Мангал','САЛАТ':'Салат','БАР':'Бар'};
 const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.ready();tg.expand();}
 const $=s=>document.querySelector(s);
 const app=$('#app'),cta=$('#cta'),go=$('#go'),go2=$('#go2');
@@ -158,11 +174,11 @@ function ownerView(D){
   app.innerHTML='';
   app.append(el(`<h1>Заявки постов</h1>`),el(`<div class="sub">На ${D.d} · проверьте и одобрите</div>`));
   const picked={},state={};
-  Object.keys(CAT).forEach(p=>{
+  Object.keys(TITLES).forEach(p=>{
     const s=D.s[p];const card=el(`<div class="card${s?'':' off'}"></div>`);
-    if(!s){card.append(el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${CAT[p].title}</b><small>ещё не прислали</small></div></div>`));app.append(card);return}
+    if(!s){card.append(el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${TITLES[p]}</b><small>ещё не прислали</small></div></div>`));app.append(card);return}
     const n=Object.keys(s.i).length+(s.x||[]).length;picked[p]=true;state[p]={i:{...s.i},x:(s.x||[]).map(a=>[...a])};
-    const ch=el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${CAT[p].title}</b><small>${s.w||''} · ${s.t||''} · ${n} поз.</small></div><div class="chk on">✓</div></div>`);
+    const ch=el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${TITLES[p]}</b><small>${s.w||''} · ${s.t||''} · ${n} поз.</small></div><div class="chk on">✓</div></div>`);
     const body=el('<div class="body"></div>');
     const mk=(name,q,setq)=>{const r=el('<div class="row on"><div class="nm"></div><input type="text" inputmode="decimal"></div>');r.querySelector('.nm').textContent=name;const i=r.querySelector('input');i.value=fmt(q);i.oninput=()=>setq(num(i.value));body.append(r)};
     Object.keys(s.i).forEach(k=>mk(k,s.i[k],v=>{if(v===null)delete state[p].i[k];else state[p].i[k]=v}));
@@ -177,12 +193,101 @@ function ownerView(D){
   go.onclick=()=>{const s={};Object.keys(picked).filter(p=>picked[p]).forEach(p=>{const st=state[p];s[p]={i:st.i,x:st.x.filter(a=>a[1]!==null)}});send({a:1,d:D.d,s})};
 }
 
+/* ---------- редактор списка товаров и цен (владелец) ---------- */
+const SECS=['МЕХРГОН','МАГАЗИН','ГУШТ','ЗЕЛЕНЬ','БАР','ПРОЧЕЕ'];
+let E={},E0={},curP='ПОВАР',edScroll=0;
+async function deflate(o){const cs=new CompressionStream('deflate-raw');const w=cs.writable.getWriter();w.write(new TextEncoder().encode(JSON.stringify(o)));w.close();
+  const u=new Uint8Array(await new Response(cs.readable).arrayBuffer());let s='';u.forEach(b=>s+=String.fromCharCode(b));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function editor(D){
+  E={};E0={};Object.keys(TITLES).forEach(p=>{E[p]=(D[p]||[]).map(a=>({name:a[0],sec:a[1],price:a[2],usual:a[3],group:a[4]||'Другое',xname:a[5]||''}));E0[p]=JSON.stringify(E[p])});
+  edTab(curP);
+}
+function changedPosts(){return Object.keys(E).filter(p=>JSON.stringify(E[p])!==E0[p])}
+function groupsOf(p){const g=[];E[p].forEach(it=>{let x=g.find(y=>y.name===it.group);if(!x){x={name:it.group,items:[]};g.push(x)}x.items.push(it)});return g}
+function flat(p,g){E[p]=[].concat(...g.map(x=>x.items))}
+function priceStr(v){return v===null||v===undefined?'':String(v).replace('.',',')}
+function pnum(v){v=String(v).replace(',','.').trim();if(!v)return null;const n=parseFloat(v);return isFinite(n)&&n>=0?n:null}
+function updSave(){const n=changedPosts().length;go.disabled=!n;go.textContent=n?`Сохранить изменения (${n})`:'Нет изменений'}
+function edTab(p){
+  curP=p;app.innerHTML='';
+  app.append(el(`<h1>Список товаров</h1>`),el(`<div class="sub">Цены только у вас, сотрудники их не видят. Нажмите на название, чтобы изменить, переместить или удалить.</div>`));
+  const tabs=el('<div class="tabs"></div>');
+  Object.keys(TITLES).forEach(q=>{const t=el(`<button class="tab${q===p?' on':''}">${ICON[q]} ${TITLES[q]}${E0[q]!==JSON.stringify(E[q])?' •':''}</button>`);t.onclick=()=>{edScroll=0;edTab(q)};tabs.append(t)});
+  app.append(tabs);
+  const search=el('<input class="search" type="search" placeholder="Найти товар" autocomplete="off">');app.append(search);
+  const box=el('<div></div>');app.append(box);
+  const rowsAll=[];
+  groupsOf(p).forEach((g,gi,ga)=>{
+    const gh=el(`<div class="egh"><span class="gn"></span><span class="gb"><button data-a="up">↑</button><button data-a="dn">↓</button><button data-a="add">+ товар</button></span></div>`);
+    gh.querySelector('.gn').textContent=g.name;
+    gh.querySelector('[data-a=up]').onclick=()=>{if(gi>0){ga.splice(gi-1,2,ga[gi],ga[gi-1]);flat(p,ga);edKeep(p)}};
+    gh.querySelector('[data-a=dn]').onclick=()=>{if(gi<ga.length-1){ga.splice(gi,2,ga[gi+1],ga[gi]);flat(p,ga);edKeep(p)}};
+    gh.querySelector('[data-a=add]').onclick=()=>{const it={name:'',sec:(g.items[0]&&g.items[0].sec)||'ПРОЧЕЕ',price:null,usual:null,group:g.name,xname:''};g.items.push(it);flat(p,ga);edSheet(p,it,true)};
+    box.append(gh);
+    const list=el('<div class="list" style="margin-top:0"></div>');
+    g.items.forEach(it=>{
+      const r=el('<div class="row erow"><div class="nm"><span></span><div class="us"></div></div><input type="text" inputmode="decimal" placeholder="цена"></div>');
+      r.querySelector('span').textContent=it.name+(it.xname?'':'');r.querySelector('.us').textContent=it.sec+(it.usual?' · обычно '+fmt(it.usual):'');
+      const inp=r.querySelector('input');inp.value=priceStr(it.price);
+      inp.oninput=()=>{it.price=pnum(inp.value);updSave();markTab()};
+      r.querySelector('.nm').onclick=()=>edSheet(p,it,false);
+      list.append(r);rowsAll.push({it,r,gh,list})});
+    box.append(list)});
+  function markTab(){[...tabs.children].forEach((t,i)=>{const q=Object.keys(TITLES)[i];t.textContent=`${ICON[q]} ${TITLES[q]}${E0[q]!==JSON.stringify(E[q])?' •':''}`})}
+  search.oninput=()=>{const v=search.value.toLowerCase().trim();rowsAll.forEach(o=>{o.r.style.display=!v||o.it.name.toLowerCase().includes(v)?'':'none'});box.querySelectorAll('.egh').forEach(x=>x.style.display=v?'none':'')};
+  const addg=el('<button class="more">+ Новая группа</button>');addg.onclick=()=>{const n=prompt('Название группы');if(n&&n.trim()){const it={name:'',sec:'ПРОЧЕЕ',price:null,usual:null,group:n.trim(),xname:''};E[p].push(it);edSheet(p,it,true)}};
+  app.append(addg);
+  go2.style.display='none';cta.style.display='block';updSave();go.onclick=edSave;
+  window.scrollTo(0,edScroll);
+}
+function edKeep(p){edScroll=window.scrollY;edTab(p)}
+function edSheet(p,it,isNew){
+  edScroll=window.scrollY;
+  const groups=groupsOf(p).map(g=>g.name);if(!groups.includes(it.group))groups.push(it.group);
+  const ov=el(`<div class="ov"><div class="sheet">
+    <h3>${isNew?'Новый товар':'Товар'}</h3>
+    <label>Название<input id="f_n" type="text"></label>
+    <div class="two2"><label>Цена, смн<input id="f_p" type="text" inputmode="decimal"></label><label>Обычно (кол-во)<input id="f_u" type="text" inputmode="decimal"></label></div>
+    <label>Раздел в таблице заявки<select id="f_s"></select></label>
+    <label>Группа в списке<select id="f_g"></select></label>
+    <div class="two2"><button id="f_up">↑ Выше</button><button id="f_dn">↓ Ниже</button></div>
+    <div class="two2"><button id="f_del" class="danger">Удалить</button><button id="f_ok" class="okb">Готово</button></div>
+  </div></div>`);
+  document.body.append(ov);
+  const $$=s=>ov.querySelector(s);
+  $$('#f_n').value=it.name;$$('#f_p').value=priceStr(it.price);$$('#f_u').value=priceStr(it.usual);
+  SECS.forEach(s=>{const o=document.createElement('option');o.textContent=s;if(s===it.sec)o.selected=true;$$('#f_s').append(o)});
+  groups.forEach(g=>{const o=document.createElement('option');o.textContent=g;if(g===it.group)o.selected=true;$$('#f_g').append(o)});
+  const on=document.createElement('option');on.textContent='+ Новая группа…';on.value='__new';$$('#f_g').append(on);
+  function apply(){it.name=$$('#f_n').value.trim();it.price=pnum($$('#f_p').value);it.usual=pnum($$('#f_u').value);it.sec=$$('#f_s').value;
+    const g=$$('#f_g').value;if(g==='__new'){const n=prompt('Название новой группы');if(n&&n.trim())it.group=n.trim()}else it.group=g}
+  function close(){ov.remove()}
+  function move(dir){apply();const g=groupsOf(p);const gr=g.find(x=>x.name===it.group);if(!gr)return;const i=gr.items.indexOf(it);const j=i+dir;
+    if(j>=0&&j<gr.items.length){gr.items.splice(i,1);gr.items.splice(j,0,it);flat(p,g)}close();edKeep(p);edSheet(p,it,isNew)}
+  $$('#f_up').onclick=()=>move(-1);$$('#f_dn').onclick=()=>move(1);
+  $$('#f_del').onclick=()=>{if(confirm('Удалить «'+(it.name||'товар')+'» из списка?')){E[p]=E[p].filter(x=>x!==it);close();edKeep(p)}};
+  $$('#f_ok').onclick=()=>{apply();if(!it.name){E[p]=E[p].filter(x=>x!==it)}else if(E[p].some(x=>x!==it&&x.name.toLowerCase()===it.name.toLowerCase())){alert('Такой товар уже есть в этом списке');return}
+    // порядок: новая группа/смена группы — товар в конец своей группы
+    const g=groupsOf(p);flat(p,g);close();edKeep(p)};
+}
+async function edSave(){
+  const ps=changedPosts();if(!ps.length)return;
+  const bad=ps.map(p=>E[p].find(i=>!i.name)).filter(Boolean);if(bad.length){alert('Есть товар без названия');return}
+  const out={};ps.forEach(p=>{out[p]=E[p].map(i=>[i.name,i.sec,i.price,i.usual,i.group,i.xname||''])});
+  const z=await deflate(out);
+  if(z.length>3900){if(ps.length>1&&ps.includes(curP)){const z2=await deflate({[curP]:out[curP]});if(z2.length<=3900&&confirm('Изменений много: сохраню только вкладку «'+TITLES[curP]+'». Остальные правки повторите после. Сохранить?')){go.disabled=true;send({e:1,z:z2});return}}alert('Слишком много изменений сразу. Сохраните по одной вкладке.');return}
+  go.disabled=true;send({e:1,z});
+}
+
 (async()=>{
   // Телеграм дописывает в хвост ссылки свои параметры (&tgWebAppData=…), поэтому разбираем хэш по '&'
   const P={};location.hash.replace(/^#/,'').split('&').forEach(x=>{const k=x.indexOf('=');if(k>0)P[x.slice(0,k)]=x.slice(k+1)});
   try{
-    if(P.o){ if(!window.DecompressionStream)throw 'Обновите Telegram';ownerView(await inflate(P.o))}
+    if(P.e){ if(!window.DecompressionStream)throw 'Обновите Telegram';editor(await inflate(P.e))}
+    else if(P.o){ if(!window.DecompressionStream)throw 'Обновите Telegram';ownerView(await inflate(P.o))}
     else if(P.s!==undefined){let R={};
+      if(!P.c||!window.DecompressionStream)throw 'Обновите Telegram и откройте заявку снова';
+      const C0=await inflate(P.c);Object.keys(C0).forEach(k=>{CAT[k]={title:C0[k].t,items:C0[k].i}});
       const now=new Date();if(now.getHours()>=5)now.setDate(now.getDate()+1);
       const date=String(now.getDate()).padStart(2,'0')+'.'+String(now.getMonth()+1).padStart(2,'0');  // как у бота: после 05:00 — на завтра
       if(P.r&&window.DecompressionStream){try{const z=await inflate(P.r);const old=z.p===undefined;const zd=old?decodeURIComponent(P.s):z.d;if(zd===date)R=old?z:z.p}catch(e){}}
