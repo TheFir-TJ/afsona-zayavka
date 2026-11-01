@@ -75,18 +75,27 @@ function send(o){const s=JSON.stringify(o);if(tg)tg.sendData(s);else alert(s)}
 function ls(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||'null');localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
 
 /* ---------- сотрудник ---------- */
-function staffHome(date,R){R=R||{};
+let S={},R0={},DATE='';
+function filled(f){return f?Object.keys(f.i||{}).filter(k=>num(f.i[k])!==null).length+(f.x||[]).filter(a=>a[0]&&num(a[1])!==null).length:0}
+function clean(f){const i={};Object.keys((f&&f.i)||{}).forEach(k=>{const n=num(f.i[k]);if(n!==null)i[k]=n});
+  const x=((f&&f.x)||[]).filter(a=>String(a[0]).trim()&&num(a[1])!==null).map(a=>[String(a[0]).trim(),num(a[1])]);return{i,x,n:((f&&f.n)||'').trim()}}
+function saveDraft(p){ls('form:'+p+':'+DATE,S[p])}
+function staffInit(date,R){DATE=date;R0=R||{};Object.keys(CAT).forEach(p=>{const l=ls('form:'+p+':'+date);S[p]=l||(R0[p]?{i:{...R0[p].i},x:(R0[p].x||[]).map(a=>[...a]),n:R0[p].n||''}:{i:{},x:[],n:''})})}
+function toSend(){return Object.keys(CAT).filter(p=>filled(S[p])>0||R0[p])}
+function staffHome(){
   cta.style.display='none';app.innerHTML='';
-  app.append(el(`<h1>Заявка</h1>`),el(`<div class="sub">На ${date} · выберите свой пост</div>`));
+  app.append(el(`<h1>Заявка</h1>`),el(`<div class="sub">На ${DATE} · заполните свой пост и нажмите «Проверить и отправить». Пока не отправите, ничего не уйдёт</div>`));
   const g=el('<div class="tiles"></div>');
   Object.keys(CAT).forEach(p=>{
-    const sent=R[p]?(Object.keys(R[p].i).length+(R[p].x||[]).length):ls('sent:'+p+':'+date);
-    const t=el(`<div class="tile${sent!==null&&sent!==undefined?' done':''}"><div class="ck">✓</div><div class="ic">${ICON[p]||'📦'}</div><div><b>${CAT[p].title}</b><small>${sent!==null&&sent!==undefined?('отправлено · '+sent+' поз.'):(CAT[p].items.length+' позиций')}</small></div></div>`);
-    t.onclick=()=>staffPost(p,date,R);g.append(t)});
+    const n=filled(S[p]),was=R0[p]?true:false;
+    const t=el(`<div class="tile${n||was?' done':''}"><div class="ck">✓</div><div class="ic">${ICON[p]||'📦'}</div><div><b>${CAT[p].title}</b><small>${n?('заполнено · '+n+' поз.'):(was?'отправлено, пусто':CAT[p].items.length+' позиций')}</small></div></div>`);
+    t.onclick=()=>staffPost(p);g.append(t)});
   app.append(g);
+  const k=toSend().length;
+  cta.style.display='block';go.disabled=!k;go.textContent=k?'Проверить и отправить':'Выберите пост и заполните';go.onclick=staffReview;
 }
-function staffPost(p,date,R){R=R||{};
-  const C=CAT[p],key='form:'+p+':'+date,saved=R[p]?{i:R[p].i,x:R[p].x,n:R[p].n}:(ls(key)||{});
+function staffPost(p){
+  const C=CAT[p],F=S[p];F.i=F.i||{};F.x=F.x||[];
   app.innerHTML='';
   const top=el(`<div class="top"><div class="bar"><button class="back">‹</button><h2>${C.title}</h2><span class="cnt" id="cnt"></span></div><input class="search" type="search" placeholder="Найти" autocomplete="off"></div>`);
   app.append(top);
@@ -94,28 +103,39 @@ function staffPost(p,date,R){R=R||{};
   C.items.forEach(([name,usual])=>{
     const r=el(`<div class="row"><div class="nm"><span></span><div class="us"></div></div><input type="text" inputmode="decimal" placeholder="—"></div>`);
     r.querySelector('span').textContent=name;r.querySelector('.us').textContent=usual?('обычно '+usual):'';
-    const inp=r.querySelector('input');if(saved.i&&saved.i[name])inp.value=saved.i[name];
+    const inp=r.querySelector('input');if(F.i[name]!==undefined&&F.i[name]!==null)inp.value=String(F.i[name]).replace('.',',');
     const o={name,r,inp};rows.push(o);inp.oninput=()=>{upd();store()};list.append(r)});
   app.append(list);
   const freeBox=el('<div></div>'),frees=[];
   function addFree(n,q){const d=el('<div class="free"><input class="fn" placeholder="Другое: название"><input class="fq" inputmode="decimal" placeholder="кол-во"></div>');
-    const a=d.querySelector('.fn'),b=d.querySelector('.fq');a.value=n||'';b.value=q||'';a.oninput=b.oninput=()=>{upd();store()};freeBox.append(d);frees.push({a,b})}
-  ((saved.x)||[]).forEach(f=>addFree(f[0],f[1]));
+    const a=d.querySelector('.fn'),b=d.querySelector('.fq');a.value=n||'';b.value=q===undefined||q===null?'':String(q).replace('.',',');a.oninput=b.oninput=()=>{upd();store()};freeBox.append(d);frees.push({a,b})}
+  F.x.forEach(f=>addFree(f[0],f[1]));
   const more=el('<button class="more">+ Добавить, чего нет в списке</button>');more.onclick=()=>addFree();
-  const note=el('<textarea placeholder="Комментарий (необязательно)"></textarea>');note.value=saved.n||'';note.oninput=store;
+  const note=el('<textarea placeholder="Комментарий (необязательно)"></textarea>');note.value=F.n||'';note.oninput=store;
   app.append(freeBox,more,note);
-  function collect(){const i={};rows.forEach(o=>{const n=num(o.inp.value);if(n!==null)i[o.name]=n});
-    const x=[];frees.forEach(f=>{const n=f.a.value.trim(),q=num(f.b.value);if(n&&q!==null)x.push([n,q])});return{i,x}}
-  function upd(){rows.forEach(o=>o.r.classList.toggle('on',num(o.inp.value)!==null));const c=collect(),n=Object.keys(c.i).length+c.x.length;
-    $('#cnt').textContent=n?('выбрано '+n):'';go.textContent=n?`Сохранить и отправить · ${n}`:'Ничего не нужно — отправить';}
-  function store(){const o={i:{},x:frees.map(f=>[f.a.value,f.b.value]),n:note.value};rows.forEach(r=>{if(r.inp.value)o.i[r.name]=r.inp.value});ls(key,o)}
-  top.querySelector('.back').onclick=()=>staffHome(date,R);
+  function cur(){const i={};rows.forEach(o=>{if(o.inp.value.trim())i[o.name]=o.inp.value});return{i,x:frees.map(f=>[f.a.value,f.b.value]),n:note.value}}
+  function upd(){rows.forEach(o=>o.r.classList.toggle('on',num(o.inp.value)!==null));const n=filled(cur());$('#cnt').textContent=n?('выбрано '+n):''}
+  function store(){S[p]=cur();saveDraft(p)}
+  top.querySelector('.back').onclick=()=>{store();staffHome()};
   top.querySelector('.search').oninput=e=>{const v=e.target.value.toLowerCase().trim();rows.forEach(o=>{o.r.style.display=!v||o.name.toLowerCase().includes(v)?'':'none'})};
-  upd();cta.style.display='block';
-  go.disabled=false;
-  go.onclick=()=>{const c=collect(),n=Object.keys(c.i).length+c.x.length;
-    if(!n&&!confirm('Ничего не заполнено. Отправить, что ничего не нужно?'))return;
-    ls('sent:'+p+':'+date,n);send({p,d:date,i:c.i,x:c.x,n:note.value.trim()})};
+  upd();cta.style.display='block';go.disabled=false;go.textContent='Готово — к выбору поста';go.onclick=()=>{store();staffHome()};
+}
+function staffReview(){
+  const ps=toSend();app.innerHTML='';
+  const top=el(`<div class="top"><div class="bar"><button class="back">‹</button><h2>Проверьте заявку</h2></div></div>`);
+  top.querySelector('.back').onclick=staffHome;app.append(top);
+  app.append(el(`<div class="sub" style="margin-top:6px">На ${DATE}. Пока вы не нажали «Всё верно, отправить», ничего не отправлено. Отправили и забыли что-то — откройте заявку снова, добавьте и отправьте: уйдёт вместе с прежним.</div>`));
+  ps.forEach(p=>{
+    const c=clean(S[p]),card=el('<div class="card"></div>'),n=Object.keys(c.i).length+c.x.length;
+    const head=el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${CAT[p].title}</b><small>${n?n+' поз.':'пусто — ничего не нужно'}</small></div></div>`);
+    head.onclick=()=>staffPost(p);card.append(head);
+    const body=el('<div class="body" style="display:block"></div>');
+    Object.keys(c.i).forEach(k=>{const r=el('<div class="row"><div class="nm"></div><b></b></div>');r.querySelector('.nm').textContent=k;r.querySelector('b').textContent=fmt(c.i[k]);body.append(r)});
+    c.x.forEach(a=>{const r=el('<div class="row"><div class="nm"></div><b></b></div>');r.querySelector('.nm').textContent=a[0]+' (своя)';r.querySelector('b').textContent=fmt(a[1]);body.append(r)});
+    if(c.n){const nn=el('<div class="note"></div>');nn.textContent='💬 '+c.n;body.append(nn)}
+    if(n||c.n)card.append(body);app.append(card)});
+  cta.style.display='block';go.disabled=false;go.textContent='Всё верно, отправить';
+  go.onclick=()=>{go.disabled=true;const m={};ps.forEach(p=>{m[p]=clean(S[p])});send({d:DATE,m})};
 }
 
 /* ---------- владелец ---------- */
@@ -146,7 +166,7 @@ function ownerView(D){
   const h=location.hash.replace(/^#/,'');
   try{
     if(h.startsWith('o=')){ if(!window.DecompressionStream)throw 'Обновите Telegram';ownerView(await inflate(h.slice(2)))}
-    else if(h.startsWith('s=')){const m=h.match(/^s=([^&]*)(?:&r=(.*))?$/);let R={};if(m[2]&&window.DecompressionStream){try{R=await inflate(m[2])}catch(e){}}staffHome(decodeURIComponent(m[1]),R)}
+    else if(h.startsWith('s=')){const m=h.match(/^s=([^&]*)(?:&r=(.*))?$/);let R={};if(m[2]&&window.DecompressionStream){try{R=await inflate(m[2])}catch(e){}}staffInit(decodeURIComponent(m[1]),R);staffHome()}
     else throw 'Откройте заявку кнопкой в боте.';
   }catch(e){app.innerHTML='<div id="err">'+e+'</div>'}
 })();
