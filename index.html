@@ -81,11 +81,11 @@ textarea{width:100%;min-height:64px;padding:12px;font-size:16px;border:1px solid
 <div class="wrap" id="app"></div>
 <div class="cta" id="cta" style="display:none"><div class="two"><button id="go2" style="display:none"></button><button id="go"></button></div></div>
 <script>
-let CAT={};const TITLES={'ПОВАР':'Кухня','МАНГАЛ':'Мангал','САЛАТ':'Салат','БАР':'Бар'};
+let CAT={};const TITLES={'ПОВАР':'Кухня','МАНГАЛ':'Мангал','САЛАТ':'Салат','БАР':'Бар','СКЛАД':'Склад'};
 const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.ready();tg.expand();}
 const $=s=>document.querySelector(s);
 const app=$('#app'),cta=$('#cta'),go=$('#go'),go2=$('#go2');
-const ICON={'ПОВАР':'🍳','МАНГАЛ':'🔥','САЛАТ':'🥗','БАР':'🍹'};
+const ICON={'ПОВАР':'🍳','МАНГАЛ':'🔥','САЛАТ':'🥗','БАР':'🍹','СКЛАД':'📦'};
 function b64u(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
 async function inflate(z){const ds=new DecompressionStream('deflate-raw');const w=ds.writable.getWriter();w.write(b64u(z));w.close();return JSON.parse(await new Response(ds.readable).text())}
 function num(v){v=String(v).replace(',','.').trim();const n=parseFloat(v);return isFinite(n)&&n>0?n:null}
