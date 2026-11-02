@@ -236,6 +236,23 @@ function ownerView(D){
   const picked={},state={},heads={};
   const mon=v=>Math.round(v).toLocaleString('ru-RU').replace(/ /g,' ');
   const sumBox=el('<div class="duebar" style="white-space:pre-line"></div>');app.append(sumBox);
+  const att=el('<div class="duebar" style="margin-top:8px"></div>');app.append(att);const rowRef={},cardRef={};
+  function attList(){const L=[];Object.keys(TITLES).forEach(p=>{
+      if(!D.s[p]){if(p!=='СКЛАД')L.push({t:'⏳ '+TITLES[p]+': ещё не прислали'});return}
+      if(!picked[p])return;const s=D.s[p],ur=s.ur||[],ic=s.ic||{},us=s.us||{},lw=s.lw||{},pr=s.pr||{};
+      Object.keys(state[p].i).forEach(k=>{const v=state[p].i[k],b=Math.max(+us[k]||0,(lw[k]||[0])[0]);const f=[];
+        if(b&&v>b*2)f.push('⚠ больше обычного ('+fmt(b)+')');
+        if(ur.includes(k))f.push('⚡ срочно');if(ic[k])f.push('💬 '+ic[k]);if(!pr[k])f.push('❓ нет цены');
+        if(PC[k])f.push('💲 цена '+fmt(PC[k][0])+' → '+fmt(PC[k][1]));
+        if(f.length)L.push({p,k,t:TITLES[p]+' · '+k+' '+fmt(v)+' — '+f.join(', ')})});
+      (state[p].x||[]).forEach(a=>L.push({p,k:a[0]+' (своя)',t:TITLES[p]+' · '+a[0]+' '+fmt(a[1])+' — ➕ своя позиция, нужна цена'}));
+      if(s.n)L.push({p,t:TITLES[p]+' · 💬 '+s.n})});return L}
+  function attRender(){const L=attList();att.innerHTML='';
+    const h=document.createElement('div');h.style.fontWeight='650';h.textContent=L.length?'Требует внимания: '+L.length+' (нажмите — открою)':'✅ Всё в норме — можно одобрить';att.append(h);
+    L.slice(0,14).forEach(e=>{const d=document.createElement('div');d.style.cssText='margin-top:7px;font-size:14px;cursor:pointer';d.textContent=e.t;
+      d.onclick=()=>{if(e.p&&cardRef[e.p]){cardRef[e.p].classList.add('open');const r=rowRef[e.p+'|'+e.k];if(r){r.scrollIntoView({block:'center',behavior:'smooth'});r.style.outline='2px solid #e5a000';setTimeout(()=>r.style.outline='',1800)}}};att.append(d)});
+    if(L.length>14){const m=document.createElement('div');m.style.cssText='margin-top:7px;font-size:13px;color:var(--mut)';m.textContent='…и ещё '+(L.length-14);att.append(m)}
+    return L}
   const PC=D.pc||{};
   function postTotal(p){const s=D.s[p],st=state[p];let t=0;Object.keys(st.i).forEach(k=>{t+=st.i[k]*((s.pr||{})[k]||0)});return t}
   function warnCount(){let n=0;Object.keys(picked).forEach(p=>{if(!picked[p])return;const s=D.s[p];Object.keys(state[p].i).forEach(k=>{const b=Math.max(+((s.us||{})[k])||0,((s.lw||{})[k]||[0])[0]);if(b&&state[p].i[k]>b*2)n++})});return n}
@@ -246,13 +263,14 @@ function ownerView(D){
     if(wc)tx+='\n⚠ позиций заметно больше обычного: '+wc;
     if(D.hint)tx+='\n'+D.hint;
     sumBox.textContent=tx;
+    attRender();
     Object.keys(heads).forEach(p=>{heads[p].textContent=(D.s[p].w||'')+' · '+(D.s[p].t||'')+' · '+(Object.keys(state[p].i).length+state[p].x.length)+' поз. · ~'+mon(postTotal(p))+' смн'+RV[D.s[p].rv||'']})}
   Object.keys(TITLES).forEach(p=>{
     const s=D.s[p];const card=el(`<div class="card${s?'':' off'}"></div>`);
     if(!s){card.append(el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${TITLES[p]}</b><small>ещё не прислали</small></div></div>`));app.append(card);return}
     picked[p]=true;state[p]={i:{...s.i},x:(s.x||[]).map(a=>[...a])};
     const ch=el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${TITLES[p]}</b><small></small></div><div class="chk on">✓</div></div>`);
-    heads[p]=ch.querySelector('small');
+    heads[p]=ch.querySelector('small');cardRef[p]=card;
     const body=el('<div class="body"></div>');
     const ur=s.ur||[],ic=s.ic||{},us=s.us||{},lw=s.lw||{};
     const mk=(name,q,setq,plain)=>{const r=el('<div class="row on"><div class="nm"><span></span><div class="us"></div></div><input type="text" inputmode="decimal"></div>');
@@ -262,7 +280,7 @@ function ownerView(D){
         if(!(s.pr||{})[name])bits.push('цены нет')}
       const u=r.querySelector('.us');u.textContent=bits.join(' · ');
       const flag=()=>{const b=Math.max(+us[name]||0,(lw[name]||[0])[0]),v=num(i.value);u.style.color=(!plain&&b&&v&&v>b*2)?'#e5484d':''};
-      const i=r.querySelector('input');i.value=fmt(q);flag();i.oninput=()=>{setq(num(i.value));flag();updSum()};body.append(r)};
+      rowRef[p+'|'+name]=r;const i=r.querySelector('input');i.value=fmt(q);flag();i.oninput=()=>{setq(num(i.value));flag();updSum()};body.append(r)};
     const keys=Object.keys(s.i).sort((a,b)=>(ur.includes(b)?1:0)-(ur.includes(a)?1:0));
     keys.forEach(k=>mk(k,s.i[k],v=>{if(v===null)delete state[p].i[k];else state[p].i[k]=v}));
     (s.x||[]).forEach((a,idx)=>mk(a[0]+' (своя)',a[1],v=>{state[p].x[idx][1]=v},true));
@@ -275,7 +293,7 @@ function ownerView(D){
     ch.onclick=()=>card.classList.toggle('open');
     card.append(ch,body);app.append(card)});
   function updO(){const k=Object.keys(picked).filter(p=>picked[p]).length;go.disabled=!k;go.textContent=k?`Одобрить и собрать · ${k}`:'Выберите заявки';updSum()}
-  kbDone();updO();go2.style.display='none';cta.style.display='block';
+  kbDone();updO();attList().forEach(e=>{if(e.p&&cardRef[e.p])cardRef[e.p].classList.add('open')});go2.style.display='none';cta.style.display='block';
   go.onclick=()=>{const s={};Object.keys(picked).filter(p=>picked[p]).forEach(p=>{const st=state[p];s[p]={i:st.i,x:st.x.filter(a=>a[1]!==null)}});send({a:1,d:D.d,s})};
 }
 
