@@ -33,6 +33,9 @@ h1{font-size:26px;font-weight:700;margin:22px 0 2px;letter-spacing:-.4px}
 .row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line)}
 .row:last-child{border-bottom:0}
 .row.on{background:var(--soft)}
+.row.due .us{color:#e5484d;font-weight:600}
+.duebar{margin-top:10px;padding:12px 14px;border-radius:14px;background:var(--soft);font-size:14px}
+.duebar button{margin-top:8px;border:0;background:var(--acc);color:#fff;padding:10px 14px;border-radius:10px;font-size:15px;font-weight:600}
 .nm{flex:1;min-width:0;font-weight:560}
 .us{color:var(--mut);font-size:12px;font-weight:400;margin-top:1px}
 .row input{width:86px;padding:10px 6px;font-size:19px;text-align:center;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--fg);outline:none;font-weight:600}
@@ -95,7 +98,7 @@ function send(o){const s=JSON.stringify(o);if(tg)tg.sendData(s);else alert(s)}
 function ls(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||'null');localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
 
 /* ---------- сотрудник ---------- */
-let S={},R0={},DATE='',Y={};
+let S={},R0={},DATE='',Y={},U={};
 function filled(f){return f?Object.keys(f.i||{}).filter(k=>num(f.i[k])!==null).length+(f.x||[]).filter(a=>a[0]&&num(a[1])!==null).length:0}
 function clean(f){const i={};Object.keys((f&&f.i)||{}).forEach(k=>{const n=num(f.i[k]);if(n!==null)i[k]=n});
   const x=((f&&f.x)||[]).filter(a=>String(a[0]).trim()&&num(a[1])!==null).map(a=>[String(a[0]).trim(),num(a[1])]);return{i,x,n:((f&&f.n)||'').trim()}}
@@ -121,14 +124,23 @@ function staffPost(p){
   app.append(top);
   const list=el('<div class="list"></div>'),rows=[];
   let lastG=null;const heads=[];
-  C.items.forEach(([name,usual,grp])=>{
+  C.items.forEach(([name,usual,grp,cyc,par])=>{
     if(grp&&grp!==lastG){const gh=el('<div class="gh"></div>');gh.textContent=grp;list.append(gh);heads.push(gh);lastG=grp}
     const r=el(`<div class="row"><div class="nm"><span></span><div class="us"></div></div><input type="text" inputmode="decimal" placeholder="—"></div>`);
-    r.querySelector('span').textContent=name;r.querySelector('.us').textContent=usual?('обычно '+usual):'';
+    r.querySelector('span').textContent=name;
+    const dueIt=(p==='СКЛАД'&&U[name]);
+    r.querySelector('.us').textContent=dueIt?('пора заказать · норма '+U[name][0]+(U[name][1]?' · в последний раз '+U[name][1]:'')):((usual?('обычно '+usual):'')+(cyc?(' · раз в '+cyc+' дн.'):''));
+    if(dueIt)r.classList.add('due');
     const inp=r.querySelector('input');if(F.i[name]!==undefined&&F.i[name]!==null)inp.value=String(F.i[name]).replace('.',',');
     const o={name,r,inp};rows.push(o);inp.oninput=()=>{upd();store()};list.append(r)});
   app.append(list);
   const freeBox=el('<div></div>'),frees=[];
+  if(p==='СКЛАД'&&Object.keys(U).length){
+    const names=Object.keys(U);
+    const bar=el('<div class="duebar"></div>');bar.textContent='⏰ Пора заказать: '+names.map(n=>n+' '+U[n][0]).join(', ');
+    const fb=el('<button>Заполнить то, что пора</button>');
+    fb.onclick=()=>{rows.forEach(o=>{if(U[o.name]&&!o.inp.value.trim())o.inp.value=String(U[o.name][0])});upd();store();fb.remove()};
+    bar.append(document.createElement('br'),fb);top.after(bar)}
   const yb=Y[p];
   if(yb&&(Object.keys(yb.i||{}).length||(yb.x||[]).length)){
     const n=Object.keys(yb.i||{}).filter(k=>C.items.some(it=>it[0]===k)).length+(yb.x||[]).length;
@@ -211,7 +223,7 @@ let E={},E0={},curP='ПОВАР',edScroll=0;
 async function deflate(o){const cs=new CompressionStream('deflate-raw');const w=cs.writable.getWriter();w.write(new TextEncoder().encode(JSON.stringify(o)));w.close();
   const u=new Uint8Array(await new Response(cs.readable).arrayBuffer());let s='';u.forEach(b=>s+=String.fromCharCode(b));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 function editor(D){
-  E={};E0={};Object.keys(TITLES).forEach(p=>{E[p]=(D[p]||[]).map(a=>({name:a[0],sec:a[1],price:a[2],usual:a[3],group:a[4]||'Другое',xname:a[5]||''}));E0[p]=JSON.stringify(E[p])});
+  E={};E0={};Object.keys(TITLES).forEach(p=>{E[p]=(D[p]||[]).map(a=>({name:a[0],sec:a[1],price:a[2],usual:a[3],group:a[4]||'Другое',xname:a[5]||'',par:a[6]||null,cycle:a[7]||null}));E0[p]=JSON.stringify(E[p])});
   edTab(curP);
 }
 function changedPosts(){return Object.keys(E).filter(p=>JSON.stringify(E[p])!==E0[p])}
@@ -239,7 +251,7 @@ function edTab(p){
     const list=el('<div class="list" style="margin-top:0"></div>');
     g.items.forEach(it=>{
       const r=el('<div class="row erow"><div class="nm"><span></span><div class="us"></div></div><input type="text" inputmode="decimal" placeholder="цена"></div>');
-      r.querySelector('span').textContent=it.name+(it.xname?'':'');r.querySelector('.us').textContent=it.sec+(it.usual?' · обычно '+fmt(it.usual):'');
+      r.querySelector('span').textContent=it.name+(it.xname?'':'');r.querySelector('.us').textContent=it.sec+(it.usual?' · обычно '+fmt(it.usual):'')+(it.cycle?' · раз в '+it.cycle+' дн. по '+fmt(it.par||0):'');
       const inp=r.querySelector('input');inp.value=priceStr(it.price);
       inp.oninput=()=>{it.price=pnum(inp.value);updSave();markTab()};
       r.querySelector('.nm').onclick=()=>edSheet(p,it,false);
@@ -270,16 +282,17 @@ function edSheet(p,it,isNew){
     <div class="two2"><label>Цена, смн<input id="f_p" type="text" inputmode="decimal"></label><label>Обычно (кол-во)<input id="f_u" type="text" inputmode="decimal"></label></div>
     <label>Раздел в таблице заявки<select id="f_s"></select></label>
     <label>Группа в списке<select id="f_g"></select></label>
+    <div class="two2"><label>Закупать за раз (шт)<input id="f_par" type="text" inputmode="decimal"></label><label>Раз в сколько дней<input id="f_cyc" type="text" inputmode="decimal"></label></div>
     <div class="two2"><button id="f_up">↑ Выше</button><button id="f_dn">↓ Ниже</button></div>
     <div class="two2"><button id="f_del" class="danger">Удалить</button><button id="f_ok" class="okb">Готово</button></div>
   </div></div>`);
   document.body.append(ov);
   const $$=s=>ov.querySelector(s);
-  $$('#f_n').value=it.name;$$('#f_p').value=priceStr(it.price);$$('#f_u').value=priceStr(it.usual);
+  $$('#f_par').value=priceStr(it.par);$$('#f_cyc').value=priceStr(it.cycle);$$('#f_n').value=it.name;$$('#f_p').value=priceStr(it.price);$$('#f_u').value=priceStr(it.usual);
   SECS.forEach(s=>{const o=document.createElement('option');o.textContent=s;if(s===it.sec)o.selected=true;$$('#f_s').append(o)});
   groups.forEach(g=>{const o=document.createElement('option');o.textContent=g;if(g===it.group)o.selected=true;$$('#f_g').append(o)});
   const on=document.createElement('option');on.textContent='+ Новая группа…';on.value='__new';$$('#f_g').append(on);
-  function apply(){it.name=$$('#f_n').value.trim();it.price=pnum($$('#f_p').value);it.usual=pnum($$('#f_u').value);it.sec=$$('#f_s').value;
+  function apply(){it.name=$$('#f_n').value.trim();it.price=pnum($$('#f_p').value);it.usual=pnum($$('#f_u').value);it.sec=$$('#f_s').value;it.par=pnum($$('#f_par').value);it.cycle=pnum($$('#f_cyc').value);if(!(it.par&&it.cycle)){it.par=null;it.cycle=null}
     const g=$$('#f_g').value;if(g==='__new'){const n=prompt('Название новой группы');if(n&&n.trim())it.group=n.trim()}else it.group=g}
   function close(){ov.remove()}
   function move(dir){apply();const g=groupsOf(p);const gr=g.find(x=>x.name===it.group);if(!gr)return;const i=gr.items.indexOf(it);const j=i+dir;
@@ -293,7 +306,7 @@ function edSheet(p,it,isNew){
 async function edSave(){
   const ps=changedPosts();if(!ps.length)return;
   const bad=ps.map(p=>E[p].find(i=>!i.name)).filter(Boolean);if(bad.length){alert('Есть товар без названия');return}
-  const out={};ps.forEach(p=>{out[p]=E[p].map(i=>[i.name,i.sec,i.price,i.usual,i.group,i.xname||''])});
+  const out={};ps.forEach(p=>{out[p]=E[p].map(i=>[i.name,i.sec,i.price,i.usual,i.group,i.xname||'',i.par||null,i.cycle||null])});
   const z=await deflate(out);
   if(z.length>3900){if(ps.length>1&&ps.includes(curP)){const z2=await deflate({[curP]:out[curP]});if(z2.length<=3900&&confirm('Изменений много: сохраню только вкладку «'+TITLES[curP]+'». Остальные правки повторите после. Сохранить?')){go.disabled=true;send({e:1,z:z2});return}}alert('Слишком много изменений сразу. Сохраните по одной вкладке.');return}
   go.disabled=true;send({e:1,z});
@@ -308,6 +321,7 @@ async function edSave(){
     else if(P.s!==undefined){let R={};
       if(!P.c||!window.DecompressionStream)throw 'Обновите Telegram и откройте заявку снова';
       if(P.y){try{Y=await inflate(P.y)}catch(e){}}
+      if(P.u){try{U=await inflate(P.u)}catch(e){}}
       const C0=await inflate(P.c);Object.keys(C0).forEach(k=>{CAT[k]={title:C0[k].t,items:C0[k].i}});
       const now=new Date();if(now.getHours()>=5)now.setDate(now.getDate()+1);
       const date=String(now.getDate()).padStart(2,'0')+'.'+String(now.getMonth()+1).padStart(2,'0');  // как у бота: после 05:00 — на завтра
