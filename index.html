@@ -275,11 +275,17 @@ function ownerView(D){
     ch.onclick=()=>card.classList.toggle('open');
     card.append(ch,body);app.append(card)});
   function updO(){const k=Object.keys(picked).filter(p=>picked[p]).length;go.disabled=!k;go.textContent=k?`Одобрить и собрать · ${k}`:'Выберите заявки';updSum()}
-  updO();go2.style.display='none';cta.style.display='block';
+  kbDone();updO();go2.style.display='none';cta.style.display='block';
   go.onclick=()=>{const s={};Object.keys(picked).filter(p=>picked[p]).forEach(p=>{const st=state[p];s[p]={i:st.i,x:st.x.filter(a=>a[1]!==null)}});send({a:1,d:D.d,s})};
 }
 
 
+/* кнопка «Готово» над клавиатурой: на цифровой клавиатуре iOS нет кнопки «скрыть» */
+function kbDone(){
+  go2.textContent='Готово';go2.onpointerdown=e=>e.preventDefault();go2.onclick=()=>{const x=document.activeElement;if(x&&x.blur)x.blur()};
+  app.addEventListener('focusin',e=>{if(e.target.matches&&e.target.matches('input'))go2.style.display='block'});
+  app.addEventListener('focusout',()=>setTimeout(()=>{const x=document.activeElement;if(!x||!x.matches||!x.matches('input'))go2.style.display='none'},200));
+}
 /* ---------- правка черновика заявки (владелец) ---------- */
 function draftView(D){
   const SEC=['МЕХРГОН','МАГАЗИН','ГУШТ','ЗЕЛЕНЬ','БАР','ПРОЧЕЕ'];
@@ -320,7 +326,7 @@ function draftView(D){
     window.scrollTo(0,y);
     go.onclick=()=>{const s={};L.filter(a=>a.q).forEach(a=>{(s[a.sc]=s[a.sc]||[]).push({n:a.n,q:a.q,p:a.p})});go.disabled=true;send({a:3,d:D.d,s})};
   }
-  render();
+  kbDone();render();
 }
 
 /* ---------- редактор списка товаров и цен (владелец) ---------- */
