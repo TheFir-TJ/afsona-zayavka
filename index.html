@@ -289,7 +289,7 @@ function kbDone(){
 /* ---------- правка черновика заявки (владелец) ---------- */
 function draftView(D){
   const SEC=['МЕХРГОН','МАГАЗИН','ГУШТ','ЗЕЛЕНЬ','БАР','ПРОЧЕЕ'];
-  const L=[];SEC.forEach(sc=>(D.s[sc]||[]).forEach(a=>L.push({n:a[0],o:a[0],q:a[1],p:a[2],sc})));
+  const L=[];let ix=0;SEC.forEach(sc=>(D.s[sc]||[]).forEach(a=>L.push({n:a[0],o:a[0],i:ix++,q:a[1],p:a[2],sc})));const N0=ix;
   const mon=v=>Math.round(v).toLocaleString('ru-RU');
   const pnum=v=>{v=String(v).replace(',','.').trim();if(!v)return null;const n=parseFloat(v);return isFinite(n)&&n>=0?n:null};
   const inp='border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);outline:none;text-align:center;font-weight:600;';
@@ -333,7 +333,7 @@ function draftView(D){
     window.scrollTo(0,y);
     const heads=[...document.querySelectorAll('.egh[id^=sec_]')];
     window.onscroll=()=>{let cur=heads[0];heads.forEach(h=>{if(h.getBoundingClientRect().top<=70)cur=h});nav.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',cur&&t.dataset.sc===cur.id.slice(4)))};window.onscroll();
-    go.onclick=()=>{const s={};L.filter(a=>a.q).forEach(a=>{(s[a.sc]=s[a.sc]||[]).push({n:a.n,o:a.o,q:a.q,p:a.p})});go.disabled=true;send({a:3,d:D.d,s})};
+    go.onclick=()=>{const s={};L.filter(a=>a.q).forEach(a=>{const r=[a.i===undefined?-1:a.i,a.q,a.p];if(a.i===undefined||a.n!==a.o)r.push(a.n);(s[a.sc]=s[a.sc]||[]).push(r)});go.disabled=true;send({a:3,d:D.d,k:N0,s})};
   }
   kbDone();render();
 }
