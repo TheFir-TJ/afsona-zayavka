@@ -229,6 +229,7 @@ function staffReview(){
 }
 
 /* ---------- владелец ---------- */
+const RV={'':'',ask:' · ⏳ на проверке',ok:' · ✅ проверено',no:' · ✏️ дополнит'};
 function ownerView(D){
   app.innerHTML='';
   app.append(el(`<h1>Заявки постов</h1>`),el(`<div class="sub">На ${D.d} · проверьте и одобрите</div>`));
@@ -245,7 +246,7 @@ function ownerView(D){
     if(wc)tx+='\n⚠ позиций заметно больше обычного: '+wc;
     if(D.hint)tx+='\n'+D.hint;
     sumBox.textContent=tx;
-    Object.keys(heads).forEach(p=>{heads[p].textContent=(D.s[p].w||'')+' · '+(D.s[p].t||'')+' · '+(Object.keys(state[p].i).length+state[p].x.length)+' поз. · ~'+mon(postTotal(p))+' смн'})}
+    Object.keys(heads).forEach(p=>{heads[p].textContent=(D.s[p].w||'')+' · '+(D.s[p].t||'')+' · '+(Object.keys(state[p].i).length+state[p].x.length)+' поз. · ~'+mon(postTotal(p))+' смн'+RV[D.s[p].rv||'']})}
   Object.keys(TITLES).forEach(p=>{
     const s=D.s[p];const card=el(`<div class="card${s?'':' off'}"></div>`);
     if(!s){card.append(el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${TITLES[p]}</b><small>ещё не прислали</small></div></div>`));app.append(card);return}
@@ -266,6 +267,9 @@ function ownerView(D){
     keys.forEach(k=>mk(k,s.i[k],v=>{if(v===null)delete state[p].i[k];else state[p].i[k]=v}));
     (s.x||[]).forEach((a,idx)=>mk(a[0]+' (своя)',a[1],v=>{state[p].x[idx][1]=v},true));
     if(s.n){const nn=el('<div class="note"></div>');nn.textContent='💬 '+s.n;body.append(nn)}
+    if(s.rv==='no'||s.rv==='ok'||s.rv==='ask'){const rr=el('<div class="note"></div>');rr.textContent={ok:'✅ Сотрудник подтвердил: всё правильно',no:'✏️ Сотрудник дополнит заявку',ask:'⏳ Отправлено на проверку, ответа ещё нет'}[s.rv];body.append(rr)}
+    const rb=el('<button class="tab" style="width:100%;margin-top:10px;padding:12px">📨 Отправить на проверку</button>');
+    rb.onclick=e=>{e.stopPropagation();const st=state[p];send({a:2,d:D.d,p,i:st.i,x:st.x.filter(a=>a[1]!==null)})};body.append(rb);
     const box=ch.querySelector('.chk');
     box.onclick=e=>{e.stopPropagation();picked[p]=!picked[p];box.classList.toggle('on',picked[p]);card.classList.toggle('off',!picked[p]);updO()};
     ch.onclick=()=>card.classList.toggle('open');
