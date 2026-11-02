@@ -289,7 +289,7 @@ function kbDone(){
 /* ---------- правка черновика заявки (владелец) ---------- */
 function draftView(D){
   const SEC=['МЕХРГОН','МАГАЗИН','ГУШТ','ЗЕЛЕНЬ','БАР','ПРОЧЕЕ'];
-  const L=[];SEC.forEach(sc=>(D.s[sc]||[]).forEach(a=>L.push({n:a[0],q:a[1],p:a[2],sc})));
+  const L=[];SEC.forEach(sc=>(D.s[sc]||[]).forEach(a=>L.push({n:a[0],o:a[0],q:a[1],p:a[2],sc})));
   const mon=v=>Math.round(v).toLocaleString('ru-RU');
   const pnum=v=>{v=String(v).replace(',','.').trim();if(!v)return null;const n=parseFloat(v);return isFinite(n)&&n>=0?n:null};
   const inp='border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);outline:none;text-align:center;font-weight:600;';
@@ -308,7 +308,12 @@ function draftView(D){
       const box=el('<div class="list" style="margin-top:0"></div>');
       items.forEach(a=>{
         const r=el(`<div class="row on" style="display:block;padding:10px 12px"><div style="display:flex;align-items:center;gap:8px"><div class="nm" style="flex:1"></div><button class="up" style="border:0;background:none;color:var(--acc);font-size:18px;padding:4px 8px">▲</button><button class="dn" style="border:0;background:none;color:var(--acc);font-size:18px;padding:4px 8px">▼</button><button class="x" style="border:0;background:none;color:#e5484d;font-size:20px;padding:4px 8px">✕</button></div><div style="display:flex;align-items:center;gap:6px;margin-top:6px"><input class="qi" inputmode="decimal" style="${inp}width:78px;padding:9px 4px;font-size:20px"><span style="color:var(--mut)">×</span><input class="pi" inputmode="decimal" placeholder="цена" style="${inp}width:78px;padding:9px 4px;font-size:20px"><span class="sm" style="flex:1;text-align:right;font-weight:650"></span></div><div style="margin-top:6px"><select class="se" style="font-size:14px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg)"></select></div></div>`);
-        r.querySelector('.nm').textContent=a.n;
+        const nmEl=r.querySelector('.nm');nmEl.textContent=a.n;
+        if(/^ПИСТА/i.test(a.n)){  // писта: владелец вписывает, за сколько кг заплатил — это идёт в название («ПИСТА 14КГ»)
+          const kg=el('<div style="margin-top:6px;display:flex;align-items:center;gap:8px;color:var(--mut)">за сколько кг заплатили: <input class="kg" inputmode="decimal" placeholder="кг" style="'+inp+'width:78px;padding:9px 4px;font-size:20px"> кг</div>');
+          const m=a.n.match(/(\d+(?:[.,]\d+)?)\s*КГ/i);kg.querySelector('.kg').value=m?m[1]:'';
+          kg.querySelector('.kg').oninput=e=>{const v=num(e.target.value);a.n=v?'ПИСТА '+fmt(v)+'КГ':'ПИСТА';nmEl.textContent=a.n};
+          r.insertBefore(kg,r.lastElementChild)}
         const qi=r.querySelector('.qi'),pi=r.querySelector('.pi'),sm=r.querySelector('.sm');
         qi.value=fmt(a.q);pi.value=a.p==null?'':fmt(a.p);
         const show=()=>{sm.textContent=(a.q&&a.p)?mon(a.q*a.p)+' смн':(a.p==null?'цены нет':'');sm.style.color=a.p==null?'#e5484d':'';pi.style.borderColor=a.p==null?'#e5484d':'var(--line)'};show();
@@ -328,7 +333,7 @@ function draftView(D){
     window.scrollTo(0,y);
     const heads=[...document.querySelectorAll('.egh[id^=sec_]')];
     window.onscroll=()=>{let cur=heads[0];heads.forEach(h=>{if(h.getBoundingClientRect().top<=70)cur=h});nav.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',cur&&t.dataset.sc===cur.id.slice(4)))};window.onscroll();
-    go.onclick=()=>{const s={};L.filter(a=>a.q).forEach(a=>{(s[a.sc]=s[a.sc]||[]).push({n:a.n,q:a.q,p:a.p})});go.disabled=true;send({a:3,d:D.d,s})};
+    go.onclick=()=>{const s={};L.filter(a=>a.q).forEach(a=>{(s[a.sc]=s[a.sc]||[]).push({n:a.n,o:a.o,q:a.q,p:a.p})});go.disabled=true;send({a:3,d:D.d,s})};
   }
   kbDone();render();
 }
