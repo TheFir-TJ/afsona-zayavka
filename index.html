@@ -95,7 +95,7 @@ function send(o){const s=JSON.stringify(o);if(tg)tg.sendData(s);else alert(s)}
 function ls(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||'null');localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
 
 /* ---------- сотрудник ---------- */
-let S={},R0={},DATE='';
+let S={},R0={},DATE='',Y={};
 function filled(f){return f?Object.keys(f.i||{}).filter(k=>num(f.i[k])!==null).length+(f.x||[]).filter(a=>a[0]&&num(a[1])!==null).length:0}
 function clean(f){const i={};Object.keys((f&&f.i)||{}).forEach(k=>{const n=num(f.i[k]);if(n!==null)i[k]=n});
   const x=((f&&f.x)||[]).filter(a=>String(a[0]).trim()&&num(a[1])!==null).map(a=>[String(a[0]).trim(),num(a[1])]);return{i,x,n:((f&&f.n)||'').trim()}}
@@ -129,6 +129,13 @@ function staffPost(p){
     const o={name,r,inp};rows.push(o);inp.oninput=()=>{upd();store()};list.append(r)});
   app.append(list);
   const freeBox=el('<div></div>'),frees=[];
+  const yb=Y[p];
+  if(yb&&(Object.keys(yb.i||{}).length||(yb.x||[]).length)){
+    const n=Object.keys(yb.i||{}).filter(k=>C.items.some(it=>it[0]===k)).length+(yb.x||[]).length;
+    const btn=el('<button class="more" style="display:block;margin:10px 0 0">↺ Подставить как в прошлый раз ('+n+' поз.)</button>');
+    btn.onclick=()=>{rows.forEach(o=>{const v=yb.i&&yb.i[o.name];if(v!==undefined&&v!==null&&!o.inp.value.trim())o.inp.value=String(v).replace('.',',')});
+      (yb.x||[]).forEach(a=>addFree(a[0],a[1]));upd();store();btn.remove()};
+    top.after(btn)}
   function addFree(n,q){const d=el('<div class="free"><input class="fn" placeholder="Другое: название"><input class="fq" inputmode="decimal" placeholder="кол-во"></div>');
     const a=d.querySelector('.fn'),b=d.querySelector('.fq');a.value=n||'';b.value=q===undefined||q===null?'':String(q).replace('.',',');a.oninput=b.oninput=()=>{upd();store()};freeBox.append(d);frees.push({a,b})}
   F.x.forEach(f=>addFree(f[0],f[1]));
@@ -161,12 +168,17 @@ function staffReview(){
     const head=el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${CAT[p].title}</b><small>${n?n+' поз.':'пусто — ничего не нужно'}</small></div></div>`);
     head.onclick=()=>staffPost(p);card.append(head);
     const body=el('<div class="body" style="display:block"></div>');
-    Object.keys(c.i).forEach(k=>{const r=el('<div class="row"><div class="nm"></div><b></b></div>');r.querySelector('.nm').textContent=k;r.querySelector('b').textContent=fmt(c.i[k]);body.append(r)});
+    Object.keys(c.i).forEach(k=>{const r=el('<div class="row"><div class="nm"></div><b></b></div>');r.querySelector('.nm').textContent=k;r.querySelector('b').textContent=fmt(c.i[k]);
+      const it=CAT[p].items.find(x=>x[0]===k);const u=it?num(it[1]):null;if(u&&(c.i[k]>u*4||c.i[k]*8<u)){r.querySelector('b').style.color='#e5484d';r.querySelector('.nm').textContent=k+'  ⚠ обычно '+fmt(u)}body.append(r)});
     c.x.forEach(a=>{const r=el('<div class="row"><div class="nm"></div><b></b></div>');r.querySelector('.nm').textContent=a[0]+' (своя)';r.querySelector('b').textContent=fmt(a[1]);body.append(r)});
     if(c.n){const nn=el('<div class="note"></div>');nn.textContent='💬 '+c.n;body.append(nn)}
     if(n||c.n)card.append(body);app.append(card)});
   go2.style.display='none';cta.style.display='block';go.disabled=false;go.textContent='Всё верно, отправить';
-  go.onclick=()=>{go.disabled=true;const m={};ps.forEach(p=>{m[p]=clean(S[p])});send({d:DATE,m})};
+  go.onclick=()=>{
+    const w=[];ps.forEach(p=>{const c=clean(S[p]);Object.keys(c.i).forEach(k=>{const it=CAT[p].items.find(x=>x[0]===k);const u=it?num(it[1]):null;
+      if(u&&(c.i[k]>u*4||c.i[k]*8<u))w.push(k+': '+fmt(c.i[k])+' (обычно '+fmt(u)+')')})});
+    if(w.length&&!confirm('Проверьте количество:\n'+w.join('\n')+'\n\nОтправить как есть?'))return;
+    go.disabled=true;const m={};ps.forEach(p=>{m[p]=clean(S[p])});send({d:DATE,m})};
 }
 
 /* ---------- владелец ---------- */
@@ -295,6 +307,7 @@ async function edSave(){
     else if(P.o){ if(!window.DecompressionStream)throw 'Обновите Telegram';ownerView(await inflate(P.o))}
     else if(P.s!==undefined){let R={};
       if(!P.c||!window.DecompressionStream)throw 'Обновите Telegram и откройте заявку снова';
+      if(P.y){try{Y=await inflate(P.y)}catch(e){}}
       const C0=await inflate(P.c);Object.keys(C0).forEach(k=>{CAT[k]={title:C0[k].t,items:C0[k].i}});
       const now=new Date();if(now.getHours()>=5)now.setDate(now.getDate()+1);
       const date=String(now.getDate()).padStart(2,'0')+'.'+String(now.getMonth()+1).padStart(2,'0');  // как у бота: после 05:00 — на завтра
