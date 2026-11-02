@@ -286,26 +286,31 @@ function draftView(D){
   const L=[];SEC.forEach(sc=>(D.s[sc]||[]).forEach(a=>L.push({n:a[0],q:a[1],p:a[2],sc})));
   const mon=v=>Math.round(v).toLocaleString('ru-RU');
   const pnum=v=>{v=String(v).replace(',','.').trim();if(!v)return null;const n=parseFloat(v);return isFinite(n)&&n>=0?n:null};
+  const inp='border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);outline:none;text-align:center;font-weight:600;';
   function render(){
     const y=window.scrollY;app.innerHTML='';
-    app.append(el('<h1>Заявка — правка</h1>'),el(`<div class="sub">На ${D.d} · меняйте количество и цену, ✕ — убрать позицию</div>`));
-    if((D.q||[]).length){const q=el('<div class="forg" style="border-radius:14px;margin-bottom:12px;white-space:pre-line"></div>');q.textContent='Нужно уточнить:\n'+D.q.join('\n');app.append(q)}
+    app.append(el('<h1>Заявка — правка</h1>'),el(`<div class="sub">На ${D.d} · как в таблице: количество, цена, сумма. ✕ убрать · ▲▼ порядок · «Раздел» — переместить</div>`));
+    if((D.q||[]).length){const q=el('<div class="forg" style="border-radius:14px;margin-bottom:12px;white-space:pre-line"></div>');q.textContent='Нужно уточнить (у этих позиций нет цены — введите её и при желании переместите в нужный раздел):\n'+D.q.join('\n');app.append(q)}
     const tot=el('<div class="duebar"></div>');app.append(tot);
     function upd(){let t=0;L.forEach(a=>{if(a.q&&a.p)t+=a.q*a.p});tot.textContent='Итого ~'+mon(t)+' смн · позиций: '+L.filter(a=>a.q).length;go.disabled=false;go.textContent='Сохранить изменения'}
     SEC.forEach(sc=>{
       const items=L.filter(a=>a.sc===sc);
-      app.append(el(`<div class="egh"><span>${sc}</span></div>`));
+      let st=0;items.forEach(a=>{if(a.q&&a.p)st+=a.q*a.p});
+      app.append(el(`<div class="egh"><span>${sc}</span><span>${items.length} поз. · ${mon(st)} смн</span></div>`));
       const box=el('<div class="list" style="margin-top:0"></div>');
       items.forEach(a=>{
-        const r=el('<div class="row on"><div class="nm"><span></span><div class="us"></div></div><input class="qi" type="text" inputmode="decimal"><button class="x" style="border:0;background:none;color:#e5484d;font-size:20px;padding:6px">✕</button></div>');
-        r.querySelector('span').textContent=a.n;
-        const u=r.querySelector('.us');
-        u.innerHTML='цена <input class="pi" type="text" inputmode="decimal" style="width:64px;font-size:14px;padding:4px;text-align:center"> смн';
-        const pi=u.querySelector('.pi');pi.value=a.p==null?'':fmt(a.p);if(a.p==null){pi.style.borderColor='#e5484d';pi.placeholder='?'}
-        pi.oninput=()=>{a.p=pnum(pi.value);pi.style.borderColor=a.p==null?'#e5484d':'';upd()};
-        if(a.p==null){const se=document.createElement('select');se.style.cssText='margin-left:6px;font-size:13px';SEC.forEach(s2=>{const o=document.createElement('option');o.value=s2;o.textContent=s2;if(s2===a.sc)o.selected=true;se.append(o)});se.onchange=()=>{a.sc=se.value;render()};u.append(se)}
-        const qi=r.querySelector('.qi');qi.value=fmt(a.q);qi.oninput=()=>{a.q=num(qi.value)||0;upd()};
-        r.querySelector('.x').onclick=()=>{const i=L.indexOf(a);L.splice(i,1);render()};
+        const r=el(`<div class="row on" style="display:block;padding:10px 12px"><div style="display:flex;align-items:center;gap:8px"><div class="nm" style="flex:1"></div><button class="up" style="border:0;background:none;color:var(--acc);font-size:18px;padding:4px 8px">▲</button><button class="dn" style="border:0;background:none;color:var(--acc);font-size:18px;padding:4px 8px">▼</button><button class="x" style="border:0;background:none;color:#e5484d;font-size:20px;padding:4px 8px">✕</button></div><div style="display:flex;align-items:center;gap:6px;margin-top:6px"><input class="qi" inputmode="decimal" style="${inp}width:78px;padding:9px 4px;font-size:20px"><span style="color:var(--mut)">×</span><input class="pi" inputmode="decimal" placeholder="цена" style="${inp}width:78px;padding:9px 4px;font-size:20px"><span class="sm" style="flex:1;text-align:right;font-weight:650"></span></div><div style="margin-top:6px"><select class="se" style="font-size:14px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg)"></select></div></div>`);
+        r.querySelector('.nm').textContent=a.n;
+        const qi=r.querySelector('.qi'),pi=r.querySelector('.pi'),sm=r.querySelector('.sm');
+        qi.value=fmt(a.q);pi.value=a.p==null?'':fmt(a.p);
+        const show=()=>{sm.textContent=(a.q&&a.p)?mon(a.q*a.p)+' смн':(a.p==null?'цены нет':'');sm.style.color=a.p==null?'#e5484d':'';pi.style.borderColor=a.p==null?'#e5484d':'var(--line)'};show();
+        qi.oninput=()=>{a.q=num(qi.value)||0;show();upd()};
+        pi.oninput=()=>{a.p=pnum(pi.value);show();upd()};
+        const se=r.querySelector('.se');SEC.forEach(s2=>{const o=document.createElement('option');o.value=s2;o.textContent='Раздел: '+s2;if(s2===a.sc)o.selected=true;se.append(o)});
+        se.onchange=()=>{a.sc=se.value;const k=L.indexOf(a);L.splice(k,1);L.push(a);render()};
+        r.querySelector('.x').onclick=()=>{L.splice(L.indexOf(a),1);render()};
+        const mv=d=>{const k=items.indexOf(a),o=items[k+d];if(!o)return;const ia=L.indexOf(a),io=L.indexOf(o);L[ia]=o;L[io]=a;render()};
+        r.querySelector('.up').onclick=()=>mv(-1);r.querySelector('.dn').onclick=()=>mv(1);
         box.append(r)});
       const add=el('<div class="free" style="padding:8px 12px"><input class="fn" placeholder="Новая позиция"><input class="fq" placeholder="Кол-во" inputmode="decimal"><input class="fq" placeholder="Цена" inputmode="decimal" style="width:70px"><button class="tab">+</button></div>');
       const ins=add.querySelectorAll('input');
