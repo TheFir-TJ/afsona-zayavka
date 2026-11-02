@@ -6,8 +6,10 @@
 <title>Заявки Афсона</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root{--bg:#f5f5f7;--card:#fff;--fg:#1c1c1e;--mut:#8e8e93;--line:#ececf0;--acc:#2f7de1;--accfg:#fff;--ok:#2fa84f;--soft:#eaf2fd;--r:16px}
-@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#1a1d23;--fg:#f2f2f5;--mut:#8b919c;--line:#262a32;--acc:#4a93ec;--soft:#1b2a3f;--ok:#41c262}}
+:root{--bg:#f5f5f7;--card:#fff;--fg:#1c1c1e;--mut:#8e8e93;--line:#ececf0;--acc:#2f7de1;--accfg:#fff;--ok:#2fa84f;--soft:#eaf2fd;--warn:#fff4d6;--warnfg:#5b4300;--r:16px}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#1a1d23;--fg:#f2f2f5;--mut:#8b919c;--line:#262a32;--acc:#4a93ec;--soft:#1b2a3f;--ok:#41c262;--warn:#3a3114;--warnfg:#f3dd9a}}
+:root.dark{--bg:#0f1115;--card:#1a1d23;--fg:#f2f2f5;--mut:#8b919c;--line:#262a32;--acc:#4a93ec;--soft:#1b2a3f;--ok:#41c262;--warn:#3a3114;--warnfg:#f3dd9a}
+:root.light{--bg:#f5f5f7;--card:#fff;--fg:#1c1c1e;--mut:#8e8e93;--line:#ececf0;--acc:#2f7de1;--soft:#eaf2fd;--ok:#2fa84f;--warn:#fff4d6;--warnfg:#5b4300}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;overflow-x:hidden}
 body{background:var(--bg);color:var(--fg);font:16px/1.35 -apple-system,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;padding-bottom:110px;min-height:100vh}
@@ -38,7 +40,7 @@ h1{font-size:26px;font-weight:700;margin:22px 0 2px;letter-spacing:-.4px}
 .duebar button{margin-top:8px;border:0;background:var(--acc);color:#fff;padding:10px 14px;border-radius:10px;font-size:15px;font-weight:600}
 .nm{flex:1;min-width:0;font-weight:560}
 .us{color:var(--mut);font-size:12px;font-weight:400;margin-top:1px}
-.row input{width:86px;padding:10px 6px;font-size:19px;text-align:center;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--fg);outline:none;font-weight:600}
+.row input{width:96px;padding:10px 6px;font-size:22px;text-align:center;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--fg);outline:none;font-weight:600}
 .row.on input{border-color:var(--acc);background:var(--card)}
 .more{margin:14px 2px;color:var(--acc);font-size:15px;background:none;border:0;padding:6px 0}
 .free{display:flex;gap:8px;margin-top:8px}
@@ -77,6 +79,14 @@ textarea{width:100%;min-height:64px;padding:12px;font-size:16px;border:1px solid
 .sheet button{padding:13px;font-size:16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);margin-top:8px}
 .sheet .okb{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:650}
 .sheet .danger{color:#e5484d}
+.pnl{display:none;padding:10px 14px 12px;background:var(--soft);border-bottom:1px solid var(--line)}
+.pnl.open{display:block}
+.pnl .pr{display:flex;gap:8px;margin-top:8px}.pnl .pr:first-child{margin-top:0}
+.pnl button{flex:1;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);font-size:15px}
+.pnl button.on{background:#e5484d;color:#fff;border-color:#e5484d}
+.pnl .row input,.pnl input.cn{width:100%;padding:10px;font-size:15px;text-align:left;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg);outline:none;font-weight:400}
+.forg{padding:12px 14px;background:var(--warn);color:var(--warnfg);font-size:14px}
+.chip{margin:8px 8px 0 0;padding:8px 12px;border-radius:999px;border:1px solid currentColor;background:transparent;color:inherit;font-size:14px}
 #err{padding:60px 20px;text-align:center;color:var(--mut)}
 </style>
 </head>
@@ -85,7 +95,7 @@ textarea{width:100%;min-height:64px;padding:12px;font-size:16px;border:1px solid
 <div class="cta" id="cta" style="display:none"><div class="two"><button id="go2" style="display:none"></button><button id="go"></button></div></div>
 <script>
 let CAT={};const TITLES={'ПОВАР':'Кухня','МАНГАЛ':'Мангал','САЛАТ':'Салат','БАР':'Бар','СКЛАД':'Склад'};
-const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.ready();tg.expand();}
+const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.ready();tg.expand();try{if(tg.colorScheme)document.documentElement.classList.add(tg.colorScheme==='dark'?'dark':'light')}catch(e){}}
 const $=s=>document.querySelector(s);
 const app=$('#app'),cta=$('#cta'),go=$('#go'),go2=$('#go2');
 const ICON={'ПОВАР':'🍳','МАНГАЛ':'🔥','САЛАТ':'🥗','БАР':'🍹','СКЛАД':'📦'};
@@ -98,12 +108,17 @@ function send(o){const s=JSON.stringify(o);if(tg)tg.sendData(s);else alert(s)}
 function ls(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||'null');localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
 
 /* ---------- сотрудник ---------- */
-let S={},R0={},DATE='',Y={},U={};
+let S={},R0={},DATE='',Y={},U={},W={};
 function filled(f){return f?Object.keys(f.i||{}).filter(k=>num(f.i[k])!==null).length+(f.x||[]).filter(a=>a[0]&&num(a[1])!==null).length:0}
 function clean(f){const i={};Object.keys((f&&f.i)||{}).forEach(k=>{const n=num(f.i[k]);if(n!==null)i[k]=n});
-  const x=((f&&f.x)||[]).filter(a=>String(a[0]).trim()&&num(a[1])!==null).map(a=>[String(a[0]).trim(),num(a[1])]);return{i,x,n:((f&&f.n)||'').trim()}}
+  const x=((f&&f.x)||[]).filter(a=>String(a[0]).trim()&&num(a[1])!==null).map(a=>[String(a[0]).trim(),num(a[1])]);
+  const u=((f&&f.u)||[]).filter(k=>i[k]!==undefined);const c={};
+  Object.keys((f&&f.c)||{}).forEach(k=>{const t=String(f.c[k]).trim();if(t&&i[k]!==undefined)c[k]=t.slice(0,60)});
+  const o={i,x,n:((f&&f.n)||'').trim()};if(u.length)o.u=u;if(Object.keys(c).length)o.c=c;return o}
 function saveDraft(p){ls('form:'+p+':'+DATE,S[p])}
-function staffInit(date,R){DATE=date;R0=R||{};Object.keys(CAT).forEach(p=>{const l=ls('form:'+p+':'+date);S[p]=l||(R0[p]?{i:{...R0[p].i},x:(R0[p].x||[]).map(a=>[...a]),n:R0[p].n||''}:{i:{},x:[],n:''})})}
+function blank(){return{i:{},x:[],n:'',u:[],c:{}}}
+function staffInit(date,R){DATE=date;R0=R||{};Object.keys(CAT).forEach(p=>{const l=ls('form:'+p+':'+date);
+  S[p]=l||(R0[p]?{i:{...R0[p].i},x:(R0[p].x||[]).map(a=>[...a]),n:R0[p].n||'',u:[...(R0[p].u||[])],c:{...(R0[p].c||{})}}:blank())})}
 function toSend(){return Object.keys(CAT).filter(p=>filled(S[p])>0||R0[p])}
 function staffHome(){
   cta.style.display='none';app.innerHTML='';
@@ -118,7 +133,7 @@ function staffHome(){
   go2.style.display='none';cta.style.display='block';go.disabled=!k;go.textContent=k?'Проверить и отправить':'Выберите пост и заполните';go.onclick=staffReview;
 }
 function staffPost(p){
-  const C=CAT[p],F=S[p];F.i=F.i||{};F.x=F.x||[];
+  const C=CAT[p],F=S[p];F.i=F.i||{};F.x=F.x||[];F.u=F.u||[];F.c=F.c||{};
   app.innerHTML='';
   const top=el(`<div class="top"><div class="bar"><button class="back">‹</button><h2>${C.title}</h2><span class="cnt" id="cnt"></span></div><input class="search" type="search" placeholder="Найти" autocomplete="off"></div>`);
   app.append(top);
@@ -129,10 +144,19 @@ function staffPost(p){
     const r=el(`<div class="row"><div class="nm"><span></span><div class="us"></div></div><input type="text" inputmode="decimal" placeholder="—"></div>`);
     r.querySelector('span').textContent=name;
     const dueIt=(p==='СКЛАД'&&U[name]);
-    r.querySelector('.us').textContent=dueIt?('пора заказать · норма '+U[name][0]+(U[name][1]?' · в последний раз '+U[name][1]:'')):((usual?('обычно '+usual):'')+(cyc?(' · раз в '+cyc+' дн.'):''));
+    const base=dueIt?('пора заказать · норма '+U[name][0]+(U[name][1]?' · в последний раз '+U[name][1]:'')):((usual?('обычно '+usual):'')+(cyc?(' · раз в '+cyc+' дн.'):''));
+    const us=r.querySelector('.us');
+    const usSet=()=>{us.textContent=base+(F.u.includes(name)?' · ⚡ срочно':'')+(F.c[name]?' · 💬 '+F.c[name]:'')};usSet();
     if(dueIt)r.classList.add('due');
     const inp=r.querySelector('input');if(F.i[name]!==undefined&&F.i[name]!==null)inp.value=String(F.i[name]).replace('.',',');
-    const o={name,r,inp};rows.push(o);inp.oninput=()=>{upd();store()};list.append(r)});
+    const pnl=el(`<div class="pnl"><div class="pr"><button class="ub">⚡ Срочно</button><button class="eb">Закончилось</button></div><div class="pr"><input class="cn" maxlength="60" placeholder="Заметка к позиции, например «помельче»"></div></div>`);
+    const ub=pnl.querySelector('.ub'),eb=pnl.querySelector('.eb'),cn=pnl.querySelector('.cn');
+    ub.classList.toggle('on',F.u.includes(name));cn.value=F.c[name]||'';
+    r.querySelector('.nm').onclick=()=>pnl.classList.toggle('open');
+    ub.onclick=()=>{const k=F.u.indexOf(name);if(k>=0)F.u.splice(k,1);else F.u.push(name);ub.classList.toggle('on',k<0);usSet();store()};
+    eb.onclick=()=>{inp.value=String(usual||1).replace('.',',');upd();store();pnl.classList.remove('open')};
+    cn.oninput=()=>{if(cn.value.trim())F.c[name]=cn.value;else delete F.c[name];usSet();store()};
+    const o={name,r,inp,pnl};rows.push(o);inp.oninput=()=>{upd();store()};list.append(r,pnl)});
   app.append(list);
   const freeBox=el('<div></div>'),frees=[];
   if(p==='СКЛАД'&&Object.keys(U).length){
@@ -141,24 +165,28 @@ function staffPost(p){
     const fb=el('<button>Заполнить то, что пора</button>');
     fb.onclick=()=>{rows.forEach(o=>{if(U[o.name]&&!o.inp.value.trim())o.inp.value=String(U[o.name][0])});upd();store();fb.remove()};
     bar.append(document.createElement('br'),fb);top.after(bar)}
-  const yb=Y[p];
-  if(yb&&(Object.keys(yb.i||{}).length||(yb.x||[]).length)){
-    const n=Object.keys(yb.i||{}).filter(k=>C.items.some(it=>it[0]===k)).length+(yb.x||[]).length;
-    const btn=el('<button class="more" style="display:block;margin:10px 0 0">↺ Подставить как в прошлый раз ('+n+' поз.)</button>');
-    btn.onclick=()=>{rows.forEach(o=>{const v=yb.i&&yb.i[o.name];if(v!==undefined&&v!==null&&!o.inp.value.trim())o.inp.value=String(v).replace('.',',')});
-      (yb.x||[]).forEach(a=>addFree(a[0],a[1]));upd();store();btn.remove()};
-    top.after(btn)}
+  const has=b=>b&&(Object.keys(b.i||{}).length||(b.x||[]).length);
+  const prefill=b=>{rows.forEach(o=>{const v=b.i&&b.i[o.name];if(v!==undefined&&v!==null&&!o.inp.value.trim())o.inp.value=String(v).replace('.',',')});
+    (b.x||[]).forEach(a=>addFree(a[0],a[1]));upd();store()};
+  const cnt=b=>Object.keys(b.i||{}).filter(k=>C.items.some(it=>it[0]===k)).length+(b.x||[]).length;
+  const lb=el('<div></div>');
+  const wb=W[p],yb=Y[p];
+  if(has(wb)){const btn=el('<button class="more" style="display:block;margin:10px 0 0"></button>');btn.textContent='↺ Как в такой же день недели ('+(wb.d||'')+') · '+cnt(wb)+' поз.';
+    btn.onclick=()=>{prefill(wb);btn.remove()};lb.append(btn)}
+  if(has(yb)&&!(has(wb)&&JSON.stringify(wb.i)===JSON.stringify(yb.i))){const btn=el('<button class="more" style="display:block;margin:10px 0 0"></button>');btn.textContent='↺ Как в прошлый раз'+(yb.d?' ('+yb.d+')':'')+' · '+cnt(yb)+' поз.';
+    btn.onclick=()=>{prefill(yb);btn.remove()};lb.append(btn)}
+  if(lb.children.length)top.after(lb);
   function addFree(n,q){const d=el('<div class="free"><input class="fn" placeholder="Другое: название"><input class="fq" inputmode="decimal" placeholder="кол-во"></div>');
     const a=d.querySelector('.fn'),b=d.querySelector('.fq');a.value=n||'';b.value=q===undefined||q===null?'':String(q).replace('.',',');a.oninput=b.oninput=()=>{upd();store()};freeBox.append(d);frees.push({a,b})}
   F.x.forEach(f=>addFree(f[0],f[1]));
   const more=el('<button class="more">+ Добавить, чего нет в списке</button>');more.onclick=()=>addFree();
   const note=el('<textarea placeholder="Комментарий (необязательно)"></textarea>');note.value=F.n||'';note.oninput=store;
   app.append(freeBox,more,note);
-  function cur(){const i={};rows.forEach(o=>{if(o.inp.value.trim())i[o.name]=o.inp.value});return{i,x:frees.map(f=>[f.a.value,f.b.value]),n:note.value}}
+  function cur(){const i={};rows.forEach(o=>{if(o.inp.value.trim())i[o.name]=o.inp.value});return{i,x:frees.map(f=>[f.a.value,f.b.value]),n:note.value,u:F.u.slice(),c:{...F.c}}}
   function upd(){rows.forEach(o=>o.r.classList.toggle('on',num(o.inp.value)!==null));const n=filled(cur());$('#cnt').textContent=n?('выбрано '+n):''}
   function store(){S[p]=cur();saveDraft(p)}
   top.querySelector('.back').onclick=()=>{store();staffHome()};
-  top.querySelector('.search').oninput=e=>{const v=e.target.value.toLowerCase().trim();rows.forEach(o=>{o.r.style.display=!v||o.name.toLowerCase().includes(v)?'':'none'});heads.forEach(x=>x.style.display=v?'none':'')};
+  top.querySelector('.search').oninput=e=>{const v=e.target.value.toLowerCase().trim();rows.forEach(o=>{const show=!v||o.name.toLowerCase().includes(v);o.r.style.display=show?'':'none';o.pnl.style.display=show?'':'none'});heads.forEach(x=>x.style.display=v?'none':'')};
   upd();cta.style.display='block';go.disabled=false;go2.style.display='block';
   const finish=()=>{store();staffHome()};
   go.textContent='Далее ↓';go2.textContent='Готово';
@@ -180,11 +208,18 @@ function staffReview(){
     const head=el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${CAT[p].title}</b><small>${n?n+' поз.':'пусто — ничего не нужно'}</small></div></div>`);
     head.onclick=()=>staffPost(p);card.append(head);
     const body=el('<div class="body" style="display:block"></div>');
-    Object.keys(c.i).forEach(k=>{const r=el('<div class="row"><div class="nm"></div><b></b></div>');r.querySelector('.nm').textContent=k;r.querySelector('b').textContent=fmt(c.i[k]);
-      const it=CAT[p].items.find(x=>x[0]===k);const u=it?num(it[1]):null;if(u&&(c.i[k]>u*4||c.i[k]*8<u)){r.querySelector('b').style.color='#e5484d';r.querySelector('.nm').textContent=k+'  ⚠ обычно '+fmt(u)}body.append(r)});
+    Object.keys(c.i).forEach(k=>{const r=el('<div class="row"><div class="nm"></div><b></b></div>');
+      r.querySelector('.nm').textContent=((c.u||[]).includes(k)?'⚡ ':'')+k+((c.c||{})[k]?'  💬 '+c.c[k]:'');r.querySelector('b').textContent=fmt(c.i[k]);
+      const it=CAT[p].items.find(x=>x[0]===k);const u=it?num(it[1]):null;if(u&&(c.i[k]>u*4||c.i[k]*8<u)){r.querySelector('b').style.color='#e5484d';r.querySelector('.nm').textContent+='  ⚠ обычно '+fmt(u)}body.append(r)});
     c.x.forEach(a=>{const r=el('<div class="row"><div class="nm"></div><b></b></div>');r.querySelector('.nm').textContent=a[0]+' (своя)';r.querySelector('b').textContent=fmt(a[1]);body.append(r)});
     if(c.n){const nn=el('<div class="note"></div>');nn.textContent='💬 '+c.n;body.append(nn)}
-    if(n||c.n)card.append(body);app.append(card)});
+    if(n||c.n)card.append(body);
+    const ref=((W[p]&&W[p].i)||(Y[p]&&Y[p].i)||{});
+    const miss=Object.keys(ref).filter(k=>c.i[k]===undefined&&CAT[p].items.some(x=>x[0]===k));
+    if(miss.length&&(n||R0[p])){const fb=el('<div class="forg"></div>');fb.append('Не забыли? В прошлый раз заказывали, а сейчас нет:');
+      miss.slice(0,10).forEach(k=>{const b=el('<button class="chip"></button>');b.textContent='+ '+k+' '+fmt(ref[k]);
+        b.onclick=()=>{S[p].i=S[p].i||{};S[p].i[k]=ref[k];saveDraft(p);staffReview()};fb.append(b)});card.append(fb)}
+    app.append(card)});
   go2.style.display='none';cta.style.display='block';go.disabled=false;go.textContent='Всё верно, отправить';
   go.onclick=()=>{
     const w=[];ps.forEach(p=>{const c=clean(S[p]);Object.keys(c.i).forEach(k=>{const it=CAT[p].items.find(x=>x[0]===k);const u=it?num(it[1]):null;
@@ -197,22 +232,45 @@ function staffReview(){
 function ownerView(D){
   app.innerHTML='';
   app.append(el(`<h1>Заявки постов</h1>`),el(`<div class="sub">На ${D.d} · проверьте и одобрите</div>`));
-  const picked={},state={};
+  const picked={},state={},heads={};
+  const mon=v=>Math.round(v).toLocaleString('ru-RU').replace(/ /g,' ');
+  const sumBox=el('<div class="duebar" style="white-space:pre-line"></div>');app.append(sumBox);
+  const PC=D.pc||{};
+  function postTotal(p){const s=D.s[p],st=state[p];let t=0;Object.keys(st.i).forEach(k=>{t+=st.i[k]*((s.pr||{})[k]||0)});return t}
+  function warnCount(){let n=0;Object.keys(picked).forEach(p=>{if(!picked[p])return;const s=D.s[p];Object.keys(state[p].i).forEach(k=>{const b=Math.max(+((s.us||{})[k])||0,((s.lw||{})[k]||[0])[0]);if(b&&state[p].i[k]>b*2)n++})});return n}
+  function updSum(){let t=0;Object.keys(picked).forEach(p=>{if(picked[p])t+=postTotal(p)});
+    const wc=warnCount();
+    let tx='Сумма заявки: ~'+mon(t)+' смн';
+    if(D.ref)tx+=' · обычно в такой день ~'+mon(D.ref)+' ('+(t>D.ref*1.3?'выше нормы':t<D.ref*0.7?'ниже нормы':'в норме')+')';
+    if(wc)tx+='\n⚠ позиций заметно больше обычного: '+wc;
+    if(D.hint)tx+='\n'+D.hint;
+    sumBox.textContent=tx;
+    Object.keys(heads).forEach(p=>{heads[p].textContent=(D.s[p].w||'')+' · '+(D.s[p].t||'')+' · '+(Object.keys(state[p].i).length+state[p].x.length)+' поз. · ~'+mon(postTotal(p))+' смн'})}
   Object.keys(TITLES).forEach(p=>{
     const s=D.s[p];const card=el(`<div class="card${s?'':' off'}"></div>`);
     if(!s){card.append(el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${TITLES[p]}</b><small>ещё не прислали</small></div></div>`));app.append(card);return}
-    const n=Object.keys(s.i).length+(s.x||[]).length;picked[p]=true;state[p]={i:{...s.i},x:(s.x||[]).map(a=>[...a])};
-    const ch=el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${TITLES[p]}</b><small>${s.w||''} · ${s.t||''} · ${n} поз.</small></div><div class="chk on">✓</div></div>`);
+    picked[p]=true;state[p]={i:{...s.i},x:(s.x||[]).map(a=>[...a])};
+    const ch=el(`<div class="ch"><div class="ic">${ICON[p]||'📦'}</div><div class="t"><b>${TITLES[p]}</b><small></small></div><div class="chk on">✓</div></div>`);
+    heads[p]=ch.querySelector('small');
     const body=el('<div class="body"></div>');
-    const mk=(name,q,setq)=>{const r=el('<div class="row on"><div class="nm"></div><input type="text" inputmode="decimal"></div>');r.querySelector('.nm').textContent=name;const i=r.querySelector('input');i.value=fmt(q);i.oninput=()=>setq(num(i.value));body.append(r)};
-    Object.keys(s.i).forEach(k=>mk(k,s.i[k],v=>{if(v===null)delete state[p].i[k];else state[p].i[k]=v}));
-    (s.x||[]).forEach((a,idx)=>mk(a[0]+' (своя)',a[1],v=>{state[p].x[idx][1]=v}));
+    const ur=s.ur||[],ic=s.ic||{},us=s.us||{},lw=s.lw||{};
+    const mk=(name,q,setq,plain)=>{const r=el('<div class="row on"><div class="nm"><span></span><div class="us"></div></div><input type="text" inputmode="decimal"></div>');
+      r.querySelector('span').textContent=(ur.includes(name)?'⚡ ':'')+name;
+      const bits=[];if(!plain){if(us[name])bits.push('обычно '+us[name]);if(lw[name])bits.push('в прошлый раз '+fmt(lw[name][0])+' ('+lw[name][1]+')');
+        if(ur.includes(name))bits.push('срочно');if(ic[name])bits.push('💬 '+ic[name]);if(PC[name])bits.push('цена '+fmt(PC[name][0])+' → '+fmt(PC[name][1]));
+        if(!(s.pr||{})[name])bits.push('цены нет')}
+      const u=r.querySelector('.us');u.textContent=bits.join(' · ');
+      const flag=()=>{const b=Math.max(+us[name]||0,(lw[name]||[0])[0]),v=num(i.value);u.style.color=(!plain&&b&&v&&v>b*2)?'#e5484d':''};
+      const i=r.querySelector('input');i.value=fmt(q);flag();i.oninput=()=>{setq(num(i.value));flag();updSum()};body.append(r)};
+    const keys=Object.keys(s.i).sort((a,b)=>(ur.includes(b)?1:0)-(ur.includes(a)?1:0));
+    keys.forEach(k=>mk(k,s.i[k],v=>{if(v===null)delete state[p].i[k];else state[p].i[k]=v}));
+    (s.x||[]).forEach((a,idx)=>mk(a[0]+' (своя)',a[1],v=>{state[p].x[idx][1]=v},true));
     if(s.n){const nn=el('<div class="note"></div>');nn.textContent='💬 '+s.n;body.append(nn)}
     const box=ch.querySelector('.chk');
     box.onclick=e=>{e.stopPropagation();picked[p]=!picked[p];box.classList.toggle('on',picked[p]);card.classList.toggle('off',!picked[p]);updO()};
     ch.onclick=()=>card.classList.toggle('open');
     card.append(ch,body);app.append(card)});
-  function updO(){const k=Object.keys(picked).filter(p=>picked[p]).length;go.disabled=!k;go.textContent=k?`Одобрить и собрать · ${k}`:'Выберите заявки'}
+  function updO(){const k=Object.keys(picked).filter(p=>picked[p]).length;go.disabled=!k;go.textContent=k?`Одобрить и собрать · ${k}`:'Выберите заявки';updSum()}
   updO();go2.style.display='none';cta.style.display='block';
   go.onclick=()=>{const s={};Object.keys(picked).filter(p=>picked[p]).forEach(p=>{const st=state[p];s[p]={i:st.i,x:st.x.filter(a=>a[1]!==null)}});send({a:1,d:D.d,s})};
 }
@@ -322,6 +380,7 @@ async function edSave(){
       if(!P.c||!window.DecompressionStream)throw 'Обновите Telegram и откройте заявку снова';
       if(P.y){try{Y=await inflate(P.y)}catch(e){}}
       if(P.u){try{U=await inflate(P.u)}catch(e){}}
+      if(P.w){try{W=await inflate(P.w)}catch(e){}}
       const C0=await inflate(P.c);Object.keys(C0).forEach(k=>{CAT[k]={title:C0[k].t,items:C0[k].i}});
       const now=new Date();if(now.getHours()>=5)now.setDate(now.getDate()+1);
       const date=String(now.getDate()).padStart(2,'0')+'.'+String(now.getMonth()+1).padStart(2,'0');  // как у бота: после 05:00 — на завтра
