@@ -279,6 +279,45 @@ function ownerView(D){
   go.onclick=()=>{const s={};Object.keys(picked).filter(p=>picked[p]).forEach(p=>{const st=state[p];s[p]={i:st.i,x:st.x.filter(a=>a[1]!==null)}});send({a:1,d:D.d,s})};
 }
 
+
+/* ---------- правка черновика заявки (владелец) ---------- */
+function draftView(D){
+  const SEC=['МЕХРГОН','МАГАЗИН','ГУШТ','ЗЕЛЕНЬ','БАР','ПРОЧЕЕ'];
+  const L=[];SEC.forEach(sc=>(D.s[sc]||[]).forEach(a=>L.push({n:a[0],q:a[1],p:a[2],sc})));
+  const mon=v=>Math.round(v).toLocaleString('ru-RU');
+  const pnum=v=>{v=String(v).replace(',','.').trim();if(!v)return null;const n=parseFloat(v);return isFinite(n)&&n>=0?n:null};
+  function render(){
+    const y=window.scrollY;app.innerHTML='';
+    app.append(el('<h1>Заявка — правка</h1>'),el(`<div class="sub">На ${D.d} · меняйте количество и цену, ✕ — убрать позицию</div>`));
+    if((D.q||[]).length){const q=el('<div class="forg" style="border-radius:14px;margin-bottom:12px;white-space:pre-line"></div>');q.textContent='Нужно уточнить:\n'+D.q.join('\n');app.append(q)}
+    const tot=el('<div class="duebar"></div>');app.append(tot);
+    function upd(){let t=0;L.forEach(a=>{if(a.q&&a.p)t+=a.q*a.p});tot.textContent='Итого ~'+mon(t)+' смн · позиций: '+L.filter(a=>a.q).length;go.disabled=false;go.textContent='Сохранить изменения'}
+    SEC.forEach(sc=>{
+      const items=L.filter(a=>a.sc===sc);
+      app.append(el(`<div class="egh"><span>${sc}</span></div>`));
+      const box=el('<div class="list" style="margin-top:0"></div>');
+      items.forEach(a=>{
+        const r=el('<div class="row on"><div class="nm"><span></span><div class="us"></div></div><input class="qi" type="text" inputmode="decimal"><button class="x" style="border:0;background:none;color:#e5484d;font-size:20px;padding:6px">✕</button></div>');
+        r.querySelector('span').textContent=a.n;
+        const u=r.querySelector('.us');
+        u.innerHTML='цена <input class="pi" type="text" inputmode="decimal" style="width:64px;font-size:14px;padding:4px;text-align:center"> смн';
+        const pi=u.querySelector('.pi');pi.value=a.p==null?'':fmt(a.p);if(a.p==null){pi.style.borderColor='#e5484d';pi.placeholder='?'}
+        pi.oninput=()=>{a.p=pnum(pi.value);pi.style.borderColor=a.p==null?'#e5484d':'';upd()};
+        if(a.p==null){const se=document.createElement('select');se.style.cssText='margin-left:6px;font-size:13px';SEC.forEach(s2=>{const o=document.createElement('option');o.value=s2;o.textContent=s2;if(s2===a.sc)o.selected=true;se.append(o)});se.onchange=()=>{a.sc=se.value;render()};u.append(se)}
+        const qi=r.querySelector('.qi');qi.value=fmt(a.q);qi.oninput=()=>{a.q=num(qi.value)||0;upd()};
+        r.querySelector('.x').onclick=()=>{const i=L.indexOf(a);L.splice(i,1);render()};
+        box.append(r)});
+      const add=el('<div class="free" style="padding:8px 12px"><input class="fn" placeholder="Новая позиция"><input class="fq" placeholder="Кол-во" inputmode="decimal"><input class="fq" placeholder="Цена" inputmode="decimal" style="width:70px"><button class="tab">+</button></div>');
+      const ins=add.querySelectorAll('input');
+      add.querySelector('button').onclick=()=>{const n=ins[0].value.trim().toUpperCase(),q=num(ins[1].value);if(!n||!q)return;L.push({n,q,p:pnum(ins[2].value),sc});render()};
+      box.append(add);app.append(box)});
+    upd();cta.style.display='block';go2.style.display='none';
+    window.scrollTo(0,y);
+    go.onclick=()=>{const s={};L.filter(a=>a.q).forEach(a=>{(s[a.sc]=s[a.sc]||[]).push({n:a.n,q:a.q,p:a.p})});go.disabled=true;send({a:3,d:D.d,s})};
+  }
+  render();
+}
+
 /* ---------- редактор списка товаров и цен (владелец) ---------- */
 const SECS=['МЕХРГОН','МАГАЗИН','ГУШТ','ЗЕЛЕНЬ','БАР','ПРОЧЕЕ'];
 let E={},E0={},curP='ПОВАР',edScroll=0;
@@ -380,6 +419,7 @@ async function edSave(){
   try{
     if(P.e){ if(!window.DecompressionStream)throw 'Обновите Telegram';editor(await inflate(P.e))}
     else if(P.o){ if(!window.DecompressionStream)throw 'Обновите Telegram';ownerView(await inflate(P.o))}
+    else if(P.d){ if(!window.DecompressionStream)throw 'Обновите Telegram';draftView(await inflate(P.d))}
     else if(P.s!==undefined){let R={};
       if(!P.c||!window.DecompressionStream)throw 'Обновите Telegram и откройте заявку снова';
       if(P.y){try{Y=await inflate(P.y)}catch(e){}}
