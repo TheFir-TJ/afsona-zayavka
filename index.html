@@ -223,7 +223,7 @@ let E={},E0={},curP='ПОВАР',edScroll=0;
 async function deflate(o){const cs=new CompressionStream('deflate-raw');const w=cs.writable.getWriter();w.write(new TextEncoder().encode(JSON.stringify(o)));w.close();
   const u=new Uint8Array(await new Response(cs.readable).arrayBuffer());let s='';u.forEach(b=>s+=String.fromCharCode(b));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 function editor(D){
-  E={};E0={};Object.keys(TITLES).forEach(p=>{E[p]=(D[p]||[]).map(a=>({name:a[0],sec:a[1],price:a[2],usual:a[3],group:a[4]||'Другое',xname:a[5]||'',par:a[6]||null,cycle:a[7]||null}));E0[p]=JSON.stringify(E[p])});
+  E={};E0={};Object.keys(TITLES).forEach(p=>{E[p]=(D[p]||[]).map(a=>({name:a[0],sec:a[1],price:a[2],usual:a[3],group:a[4]||'Другое',xname:a[5]||'',par:a[6]||null,cycle:a[7]||null,orig:a[0]}));E0[p]=JSON.stringify(E[p])});
   edTab(curP);
 }
 function changedPosts(){return Object.keys(E).filter(p=>JSON.stringify(E[p])!==E0[p])}
@@ -306,7 +306,7 @@ function edSheet(p,it,isNew){
 async function edSave(){
   const ps=changedPosts();if(!ps.length)return;
   const bad=ps.map(p=>E[p].find(i=>!i.name)).filter(Boolean);if(bad.length){alert('Есть товар без названия');return}
-  const out={};ps.forEach(p=>{out[p]=E[p].map(i=>[i.name,i.sec,i.price,i.usual,i.group,i.xname||'',i.par||null,i.cycle||null])});
+  const out={};ps.forEach(p=>{out[p]=E[p].map(i=>[i.name,i.sec,i.price,i.usual,i.group,i.xname||'',i.par||null,i.cycle||null,i.orig||''])});
   const z=await deflate(out);
   if(z.length>3900){if(ps.length>1&&ps.includes(curP)){const z2=await deflate({[curP]:out[curP]});if(z2.length<=3900&&confirm('Изменений много: сохраню только вкладку «'+TITLES[curP]+'». Остальные правки повторите после. Сохранить?')){go.disabled=true;send({e:1,z:z2});return}}alert('Слишком много изменений сразу. Сохраните по одной вкладке.');return}
   go.disabled=true;send({e:1,z});
