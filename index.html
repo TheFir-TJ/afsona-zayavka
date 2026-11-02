@@ -66,7 +66,7 @@ textarea{width:100%;min-height:64px;padding:12px;font-size:16px;border:1px solid
 .tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px}
 .tab{flex:none;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:9px 13px;border-radius:12px;font-size:15px}
 .tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
-.egh{display:flex;align-items:center;justify-content:space-between;padding:14px 4px 6px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mut)}
+.egh{position:sticky;top:0;z-index:4;background:var(--bg);display:flex;align-items:center;justify-content:space-between;padding:14px 4px 6px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mut)}
 .egh .gb button{border:1px solid var(--line);background:var(--card);color:var(--acc);border-radius:9px;padding:5px 9px;margin-left:5px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500}
 .erow .nm{cursor:pointer}
 .erow input{width:84px}
@@ -309,7 +309,7 @@ function edTab(p){
     const list=el('<div class="list" style="margin-top:0"></div>');
     g.items.forEach(it=>{
       const r=el('<div class="row erow"><div class="nm"><span></span><div class="us"></div></div><input type="text" inputmode="decimal" placeholder="цена"></div>');
-      r.querySelector('span').textContent=it.name+(it.xname?'':'');r.querySelector('.us').textContent=it.sec+(it.usual?' · обычно '+fmt(it.usual):'')+(it.cycle?' · раз в '+it.cycle+' дн. по '+fmt(it.par||0):'');
+      r.querySelector('span').textContent=it.name+(it.xname?'':'');r.querySelector('.us').textContent='▸ '+(it.group||'Другое')+' · '+it.sec+(it.usual?' · обычно '+fmt(it.usual):'')+(it.cycle?' · раз в '+it.cycle+' дн. по '+fmt(it.par||0):'');
       const inp=r.querySelector('input');inp.value=priceStr(it.price);
       inp.oninput=()=>{it.price=pnum(inp.value);updSave();markTab()};
       r.querySelector('.nm').onclick=()=>edSheet(p,it,false);
