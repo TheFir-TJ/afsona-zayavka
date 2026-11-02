@@ -298,11 +298,13 @@ function draftView(D){
     app.append(el('<h1>Заявка — правка</h1>'),el(`<div class="sub">На ${D.d} · как в таблице: количество, цена, сумма. ✕ убрать · ▲▼ порядок · «Раздел» — переместить</div>`));
     if((D.q||[]).length){const q=el('<div class="forg" style="border-radius:14px;margin-bottom:12px;white-space:pre-line"></div>');q.textContent='Нужно уточнить (у этих позиций нет цены — введите её и при желании переместите в нужный раздел):\n'+D.q.join('\n');app.append(q)}
     const tot=el('<div class="duebar"></div>');app.append(tot);
+    const nav=el('<div class="tabs" style="position:sticky;top:0;z-index:6;background:var(--bg);padding:8px 0;margin-top:6px"></div>');app.append(nav);
     function upd(){let t=0;L.forEach(a=>{if(a.q&&a.p)t+=a.q*a.p});tot.textContent='Итого ~'+mon(t)+' смн · позиций: '+L.filter(a=>a.q).length;go.disabled=false;go.textContent='Сохранить изменения'}
     SEC.forEach(sc=>{
       const items=L.filter(a=>a.sc===sc);
       let st=0;items.forEach(a=>{if(a.q&&a.p)st+=a.q*a.p});
-      app.append(el(`<div class="egh"><span>${sc}</span><span>${items.length} поз. · ${mon(st)} смн</span></div>`));
+      const hd=el(`<div class="egh" style="top:52px"><span>${sc}</span><span>${items.length} поз. · ${mon(st)} смн</span></div>`);hd.id='sec_'+sc;hd.style.scrollMarginTop='56px';app.append(hd);
+      const tb=el(`<button class="tab" data-sc="${sc}">${sc[0]+sc.slice(1).toLowerCase()} ${items.length}</button>`);tb.onclick=()=>hd.scrollIntoView({behavior:'smooth',block:'start'});nav.append(tb);
       const box=el('<div class="list" style="margin-top:0"></div>');
       items.forEach(a=>{
         const r=el(`<div class="row on" style="display:block;padding:10px 12px"><div style="display:flex;align-items:center;gap:8px"><div class="nm" style="flex:1"></div><button class="up" style="border:0;background:none;color:var(--acc);font-size:18px;padding:4px 8px">▲</button><button class="dn" style="border:0;background:none;color:var(--acc);font-size:18px;padding:4px 8px">▼</button><button class="x" style="border:0;background:none;color:#e5484d;font-size:20px;padding:4px 8px">✕</button></div><div style="display:flex;align-items:center;gap:6px;margin-top:6px"><input class="qi" inputmode="decimal" style="${inp}width:78px;padding:9px 4px;font-size:20px"><span style="color:var(--mut)">×</span><input class="pi" inputmode="decimal" placeholder="цена" style="${inp}width:78px;padding:9px 4px;font-size:20px"><span class="sm" style="flex:1;text-align:right;font-weight:650"></span></div><div style="margin-top:6px"><select class="se" style="font-size:14px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg)"></select></div></div>`);
@@ -324,6 +326,8 @@ function draftView(D){
       box.append(add);app.append(box)});
     upd();cta.style.display='block';go2.style.display='none';
     window.scrollTo(0,y);
+    const heads=[...document.querySelectorAll('.egh[id^=sec_]')];
+    window.onscroll=()=>{let cur=heads[0];heads.forEach(h=>{if(h.getBoundingClientRect().top<=70)cur=h});nav.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',cur&&t.dataset.sc===cur.id.slice(4)))};window.onscroll();
     go.onclick=()=>{const s={};L.filter(a=>a.q).forEach(a=>{(s[a.sc]=s[a.sc]||[]).push({n:a.n,q:a.q,p:a.p})});go.disabled=true;send({a:3,d:D.d,s})};
   }
   kbDone();render();
